@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useCallback } from 'react';
 import { AppContext } from '../context/AppContext';
 import { ACTIONS } from '../context/actions';
 
@@ -8,7 +8,15 @@ export function useAppContext() {
   return ctx;
 }
 
+/**
+ * useNav — stable navigation callback.
+ * Memoised with useCallback so components that receive this as a prop
+ * don't re-render unnecessarily when the parent re-renders.
+ */
 export function useNav() {
   const { dispatch } = useAppContext();
-  return (view) => dispatch({ type: ACTIONS.SET_VIEW, payload: view });
+  return useCallback(
+    (view) => dispatch({ type: ACTIONS.SET_VIEW, payload: view }),
+    [dispatch],
+  );
 }
