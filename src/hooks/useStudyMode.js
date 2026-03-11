@@ -7,7 +7,8 @@ export function useStudyMode() {
   const { cards, studyMode, filters } = state;
 
   const filteredCards = useMemo(() => {
-    let result = [...cards];
+    // Strip any null/undefined entries that can arise from stale persisted state
+    let result = cards.filter(c => c != null);
 
     // Apply global filters
     if (filters.unitId) {
@@ -73,5 +74,5 @@ export function useStudyMode() {
     dispatch({ type: ACTIONS.RESET_FILTERS });
   };
 
-  return { filteredCards, studyMode, setMode, setFilter, resetFilters, allCards: cards };
+  return { filteredCards, studyMode, setMode, setFilter, resetFilters, allCards: cards.filter(c => c != null) };
 }
