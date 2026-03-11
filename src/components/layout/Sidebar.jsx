@@ -1,32 +1,39 @@
 import { useAppContext, useNav } from '../../hooks/useAppContext';
 import { ACTIONS } from '../../context/actions';
+import { APP_MODE } from '../../constants/modes';
+import { VIEWS } from '../../constants/views';
+import ModeSwitcher from '../mode/ModeSwitcher';
 
-const NAV_ITEMS = [
-  { view: 'dashboard', icon: '⬡', label: 'Dashboard' },
-  { view: 'import', icon: '↑', label: 'Import Materials' },
-  { view: 'analysis', icon: '◎', label: 'Analysis' },
-  { view: 'card_generation', icon: '▣', label: 'Study Cards' },
-  { view: 'study_modes', icon: '◈', label: 'Study Modes' },
-  { view: 'export', icon: '↗', label: 'Export' },
+const NEURO_NAV = [
+  { view: VIEWS.DASHBOARD,       icon: '⬡', label: 'Dashboard'       },
+  { view: VIEWS.IMPORT,          icon: '↑', label: 'Import Materials' },
+  { view: VIEWS.ANALYSIS,        icon: '◎', label: 'Analysis'         },
+  { view: VIEWS.CARD_GENERATION, icon: '▣', label: 'Study Cards'      },
+  { view: VIEWS.STUDY_MODES,     icon: '◈', label: 'Study Modes'      },
+  { view: VIEWS.EXPORT,          icon: '↗', label: 'Export'           },
 ];
 
-const SOURCE_TYPE_COLORS = {
-  quiz: '#6366f1',
-  syllabus: '#8b5cf6',
-  transcript: '#0ea5e9',
-  slides: '#10b981',
-  study_guide: '#14b8a6',
-  notes: '#f59e0b',
-  textbook: '#6b7280',
-  web: '#9ca3af',
+const SCHOOL_NAV = [
+  { view: VIEWS.SCHOOL_MODE, icon: '📚', label: 'Lecture Intelligence' },
+];
+
+const WORK_NAV = [
+  { view: VIEWS.WORK_MODE, icon: '💼', label: 'Meeting Intelligence' },
+];
+
+const NAV_BY_MODE = {
+  [APP_MODE.NEURO]:  NEURO_NAV,
+  [APP_MODE.SCHOOL]: SCHOOL_NAV,
+  [APP_MODE.WORK]:   WORK_NAV,
 };
 
 export default function Sidebar() {
   const { state, dispatch } = useAppContext();
   const navigate = useNav();
-  const { currentView, course, sidebarCollapsed, sources, cards } = state;
+  const { currentView, course, sidebarCollapsed, sources, cards, appMode } = state;
 
   const hasCourse = !!course;
+  const navItems  = NAV_BY_MODE[appMode] ?? NEURO_NAV;
 
   return (
     <aside
@@ -42,14 +49,17 @@ export default function Sidebar() {
         </div>
         {!sidebarCollapsed && (
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-ink-900 truncate">NeuroCard AI</div>
+            <div className="text-sm font-semibold text-ink-900 truncate">NeuroApp</div>
             <div className="text-xs text-ink-500 truncate">Study Intelligence</div>
           </div>
         )}
       </div>
 
-      {/* Course Info */}
-      {hasCourse && !sidebarCollapsed && (
+      {/* Mode Switcher */}
+      <ModeSwitcher collapsed={sidebarCollapsed} />
+
+      {/* Course Info — NeuroCards mode only */}
+      {appMode === APP_MODE.NEURO && hasCourse && !sidebarCollapsed && (
         <div className="px-4 py-3 border-b border-surface-200">
           <div className="text-xs font-medium text-ink-500 uppercase tracking-wider mb-1">Current Course</div>
           <div className="text-sm font-semibold text-ink-900 truncate">{course.name}</div>
@@ -60,9 +70,9 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 px-2 py-3 space-y-0.5">
-        {NAV_ITEMS.map(({ view, icon, label }) => {
-          const disabled = !hasCourse && view !== 'dashboard';
-          const active = currentView === view;
+        {navItems.map(({ view, icon, label }) => {
+          const disabled = appMode === APP_MODE.NEURO && !hasCourse && view !== VIEWS.DASHBOARD;
+          const active   = currentView === view;
           return (
             <button
               key={view}
@@ -84,8 +94,8 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Stats */}
-      {hasCourse && !sidebarCollapsed && (
+      {/* Stats — NeuroCards mode only */}
+      {appMode === APP_MODE.NEURO && hasCourse && !sidebarCollapsed && (
         <div className="px-4 py-3 border-t border-surface-200">
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-surface-0 rounded-lg p-2 text-center">

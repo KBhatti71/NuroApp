@@ -5,6 +5,7 @@
  * App.jsx will automatically stay in sync.
  */
 export const VIEWS = {
+  // NeuroCards mode
   LANDING:         'landing',
   COURSE_SETUP:    'course_setup',
   DASHBOARD:       'dashboard',
@@ -13,4 +14,8 @@ export const VIEWS = {
   CARD_GENERATION: 'card_generation',
   STUDY_MODES:     'study_modes',
   EXPORT:          'export',
+
+  // Intelligence Layer
+  SCHOOL_MODE:     'school_mode',
+  WORK_MODE:       'work_mode',
 };

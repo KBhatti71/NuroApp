@@ -6,7 +6,6 @@ import ErrorBoundary from '@/components/common/ErrorBoundary';
 import Spinner from '@/components/ui/Spinner';
 
 // Lazy-load views so each chunk is only fetched when first navigated to.
-// This keeps the initial bundle small and improves perceived load time.
 const LandingView        = lazy(() => import('@/views/LandingView'));
 const CourseSetupView    = lazy(() => import('@/views/CourseSetupView'));
 const DashboardView      = lazy(() => import('@/views/DashboardView'));
@@ -15,6 +14,8 @@ const AnalysisView       = lazy(() => import('@/views/AnalysisView'));
 const CardGenerationView = lazy(() => import('@/views/CardGenerationView'));
 const StudyModesView     = lazy(() => import('@/views/StudyModesView'));
 const ExportView         = lazy(() => import('@/views/ExportView'));
+const SchoolModeView     = lazy(() => import('@/views/SchoolModeView'));
+const WorkModeView       = lazy(() => import('@/views/WorkModeView'));
 
 const VIEW_MAP = {
   [VIEWS.LANDING]:         LandingView,
@@ -25,6 +26,8 @@ const VIEW_MAP = {
   [VIEWS.CARD_GENERATION]: CardGenerationView,
   [VIEWS.STUDY_MODES]:     StudyModesView,
   [VIEWS.EXPORT]:          ExportView,
+  [VIEWS.SCHOOL_MODE]:     SchoolModeView,
+  [VIEWS.WORK_MODE]:       WorkModeView,
 };
 
 function ViewFallback() {

@@ -114,3 +114,150 @@ Return ONLY raw JSON — no markdown fences, no commentary.`;
 export function buildCourseMapUserPrompt(syllabusText) {
   return `Extract the course map from this syllabus:\n\n${syllabusText.slice(0, 8000)}`;
 }
+
+// ─── School Mode: Lecture Intelligence ───────────────────────────────────────
+
+export function buildLectureSystemPrompt(sessionType) {
+  const context = sessionType === 'office_hours'
+    ? 'an office-hours session where a student is asking a professor questions'
+    : sessionType === 'study_group'
+    ? 'a peer study-group session'
+    : 'a formal lecture from a professor';
+
+  return `You are an expert academic learning assistant analysing ${context}.
+
+Analyse the provided transcript/notes and return a JSON object with this exact schema:
+
+\`\`\`json
+{
+  "summary": "string — 2-3 sentence overview of what was covered",
+  "keyTakeaways": ["string — top 5 must-remember points"],
+  "concepts": [
+    {
+      "name": "string",
+      "explanation": "string (≤40 words)",
+      "importance": "number 0-100",
+      "importanceReason": "string — why this scores high"
+    }
+  ],
+  "importantMoments": [
+    {
+      "text": "string — verbatim quote or paraphrase",
+      "score": "number 0-100",
+      "tier": "critical|high|medium|low",
+      "reason": "string — keyword/repetition/emphasis/confusion"
+    }
+  ],
+  "flashcards": [
+    { "front": "string — question or term", "back": "string — answer/definition", "importance": "number 0-100" }
+  ],
+  "questions": [
+    { "text": "string — practice question", "answer": "string", "importance": "number 0-100" }
+  ],
+  "confusionMoments": [
+    { "text": "string — what was confusing", "context": "string — surrounding explanation" }
+  ],
+  "studySuggestions": ["string — actionable next steps with urgency level"]
+}
+\`\`\`
+
+Rules:
+- Return ONLY raw JSON — no markdown fences, no commentary.
+- \`importance\` scores: 75-100 = exam-critical, 50-74 = high-yield, 25-49 = useful, 0-24 = background.
+- Detect emphasis from: CAPS, repetition, "this will be on the exam", "remember", explicit slow-down signals.
+- Limit concepts to top 8, flashcards to top 10, questions to top 5.`;
+}
+
+export function buildLectureUserPrompt(rawText, title) {
+  return `Analyse this ${title ? `"${title}" ` : ''}lecture transcript and generate structured study intelligence:
+
+---
+${rawText.slice(0, 12000)}
+---`;
+}
+
+// ─── Work Mode: Meeting Intelligence ─────────────────────────────────────────
+
+export function buildMeetingSystemPrompt(sessionType) {
+  const context = {
+    one_on_one:   'a 1:1 between a manager and direct report',
+    presentation: 'a business presentation',
+    standup:      'a team standup/scrum meeting',
+    meeting:      'a business meeting',
+  }[sessionType] ?? 'a business meeting';
+
+  return `You are an executive intelligence assistant analysing ${context}.
+
+Extract structured intelligence from the transcript and return a JSON object with this exact schema:
+
+\`\`\`json
+{
+  "summary": "string — 2-3 sentence TL;DR of what happened and what matters",
+  "decisions": [
+    {
+      "text": "string — what was decided",
+      "support": ["string — names/roles who agreed"],
+      "concerns": ["string — names/roles with reservations + brief quote"],
+      "status": "decided|pending|blocked",
+      "importance": "number 0-100"
+    }
+  ],
+  "actionItems": [
+    {
+      "owner": "string — name or role",
+      "task": "string — clear deliverable",
+      "deadline": "string or null",
+      "urgency": "urgent|normal|low",
+      "committed": "boolean — did they explicitly commit?",
+      "importance": "number 0-100"
+    }
+  ],
+  "stakeholders": [
+    {
+      "name": "string",
+      "sentiment": "supportive|neutral|concerned|opposed",
+      "keyQuote": "string",
+      "confidence": "number 0-1"
+    }
+  ],
+  "criticalMoments": [
+    {
+      "text": "string — verbatim or paraphrase",
+      "score": "number 0-100",
+      "tier": "critical|high|medium|low",
+      "reason": "string — disagreement/commitment/blocker/urgency/repetition"
+    }
+  ],
+  "followUps": [
+    {
+      "topic": "string",
+      "person": "string or null",
+      "priority": "urgent|normal|low",
+      "context": "string — why this needs follow-up"
+    }
+  ],
+  "importantMoments": [
+    {
+      "text": "string",
+      "score": "number 0-100",
+      "tier": "critical|high|medium|low",
+      "reason": "string"
+    }
+  ]
+}
+\`\`\`
+
+Rules:
+- Return ONLY raw JSON — no markdown fences.
+- Detect importance from: raised voice (CAPS/!), keywords (blocker/urgent/deadline/decision), repetition, disagreements.
+- \`committed: true\` only if person said "I will", "I'll have it", "by [date]", or equivalent.
+- Limit decisions to top 5, action items to top 8, stakeholders to top 6.`;
+}
+
+export function buildMeetingUserPrompt(rawText, title) {
+  return `Analyse this ${title ? `"${title}" ` : ''}meeting transcript:
+
+---
+${rawText.slice(0, 12000)}
+---`;
+}
