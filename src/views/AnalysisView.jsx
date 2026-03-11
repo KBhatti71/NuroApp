@@ -1,0 +1,67 @@
+import { useAppContext, useNav } from '../hooks/useAppContext';
+import PipelineProgress from '../components/analysis/PipelineProgress';
+import ProfessorStylePanel from '../components/analysis/ProfessorStylePanel';
+import QuizPatternPanel from '../components/analysis/QuizPatternPanel';
+import ConceptHeatmap from '../components/analysis/ConceptHeatmap';
+import Button from '../components/ui/Button';
+
+export default function AnalysisView() {
+  const { state } = useAppContext();
+  const navigate = useNav();
+  const { pipeline, analysis } = state;
+
+  const isRunning = pipeline.status === 'running';
+  const isIdle = pipeline.status === 'idle';
+  const hasAnalysis = analysis.professorStyle || analysis.quizPattern || analysis.highYieldConcepts?.length > 0;
+
+  if (isRunning || (!hasAnalysis && !isIdle)) {
+    return (
+      <div className="py-10">
+        <PipelineProgress pipeline={pipeline} />
+      </div>
+    );
+  }
+
+  if (!hasAnalysis) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="text-4xl mb-4 opacity-40">◎</div>
+        <h2 className="text-lg font-semibold text-ink-900 mb-2">No Analysis Yet</h2>
+        <p className="text-ink-500 text-sm mb-6 max-w-sm">
+          Import materials and run the analysis pipeline to see professor style detection and concept scoring.
+        </p>
+        <Button onClick={() => navigate('import')}>Import Materials →</Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 max-w-5xl mx-auto">
+      {/* Pipeline log (completed state) */}
+      {pipeline.log?.length > 0 && (
+        <div className="bg-ink-900 rounded-xl p-4 space-y-1">
+          {pipeline.log.map((line, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <span className="text-primary-500 text-xs font-mono">→</span>
+              <span className="text-xs text-ink-300 font-mono">{line}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Three analysis panels */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <ProfessorStylePanel style={analysis.professorStyle} />
+        <QuizPatternPanel pattern={analysis.quizPattern} />
+        <ConceptHeatmap concepts={analysis.highYieldConcepts} />
+      </div>
+
+      {/* Action */}
+      <div className="flex justify-end">
+        <Button onClick={() => navigate('card_generation')} size="lg">
+          View Generated Cards →
+        </Button>
+      </div>
+    </div>
+  );
+}
