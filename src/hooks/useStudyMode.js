@@ -73,5 +73,5 @@ export function useStudyMode() {
     dispatch({ type: ACTIONS.RESET_FILTERS });
   };
 
-  return { filteredCards, studyMode, setMode, setFilter, resetFilters, allCards: cards };
+  return { filteredCards, studyMode, setMode, setFilter, resetFilters, allCards: cards.filter(Boolean) };
 }

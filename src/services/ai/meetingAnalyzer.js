@@ -95,7 +95,10 @@ export async function analyzeMeeting(rawText, title, sessionType = 'meeting') {
     try {
       const system = buildMeetingSystemPrompt(sessionType);
       const user   = buildMeetingUserPrompt(rawText, title);
-      return await generateJSON(system, user);
+      // Use 4096 tokens — the meeting schema (decisions, action items, stakeholders,
+      // criticalMoments, followUps, importantMoments) exceeds the 1024-token default
+      // and causes truncated/invalid JSON responses.
+      return await generateJSON(system, user, 4096);
     } catch (err) {
       console.warn('[meetingAnalyzer] LLM failed, using heuristic fallback:', err.message);
     }
