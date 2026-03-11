@@ -47,7 +47,7 @@ export function useStudyMode() {
           .sort((a, b) => b.quizLikelihood - a.quizLikelihood);
         break;
       case 'syllabus_aligned':
-        result = result.sort((a, b) => a.unitId.localeCompare(b.unitId));
+        result = result.sort((a, b) => (a.unitId ?? '').localeCompare(b.unitId ?? ''));
         break;
       case 'flashcard':
       case 'quiz_predictor':
