@@ -37,6 +37,22 @@ export const ACTIONS = {
   SET_FILTER: 'SET_FILTER',
   RESET_FILTERS: 'RESET_FILTERS',
 
+  // App mode (neuro | school | work)
+  SET_APP_MODE: 'SET_APP_MODE',
+
+  // ── Intelligence Layer (School + Work) ──────────────────────────────────────
+  // Sessions — one capture per lecture or meeting
+  ADD_SESSION: 'ADD_SESSION',
+  UPDATE_SESSION: 'UPDATE_SESSION',
+  DELETE_SESSION: 'DELETE_SESSION',
+  SET_ACTIVE_SESSION: 'SET_ACTIVE_SESSION',
+
+  // Per-session AI analysis
+  SET_SESSION_ANALYSIS: 'SET_SESSION_ANALYSIS',
+  SESSION_ANALYSIS_START: 'SESSION_ANALYSIS_START',
+  SESSION_ANALYSIS_COMPLETE: 'SESSION_ANALYSIS_COMPLETE',
+  SESSION_ANALYSIS_ERROR: 'SESSION_ANALYSIS_ERROR',
+
   // Persistence
   HYDRATE: 'HYDRATE',
   RESET_ALL: 'RESET_ALL',

@@ -1,4 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Point the worker at the bundled worker file
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.mjs',
+  import.meta.url,
+).toString();
 
 export const SOURCE_TYPE_LABELS = {
   quiz: 'Quiz / Assessment',
@@ -47,7 +54,9 @@ function inferSourceType(filename) {
 }
 
 export async function parseFileContent(file) {
-  const text = await readFileAsText(file);
+  const text = file.type === 'application/pdf'
+    ? await readPdfAsText(file)
+    : await readFileAsText(file);
   const inferredType = inferSourceType(file.name);
   return {
     id: uuidv4(),
@@ -76,6 +85,18 @@ export function parseTextContent(name, rawText, type = 'notes') {
     tokenCount: estimateTokens(content),
     needsTypeConfirmation: false,
   };
+}
+
+async function readPdfAsText(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const pageTexts = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    pageTexts.push(content.items.map((item) => item.str).join(' '));
+  }
+  return pageTexts.join('\n\n');
 }
 
 function readFileAsText(file) {

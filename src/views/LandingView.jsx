@@ -1,5 +1,7 @@
 import { useAppContext, useNav } from '../hooks/useAppContext';
 import { ACTIONS } from '../context/actions';
+import { APP_MODE } from '../constants/modes';
+import { VIEWS } from '../constants/views';
 import { MOCK_CARDS } from '../data/mockCards';
 import { mockCourse, mockCourseMap } from '../data/mockCourse';
 import { mockProfessorStyle, mockQuizPattern, mockHighYieldConcepts } from '../data/mockAnalysis';
@@ -54,7 +56,18 @@ export default function LandingView() {
       },
     });
     dispatch({ type: ACTIONS.SET_CARDS, payload: MOCK_CARDS });
-    navigate('card_generation');
+    dispatch({ type: ACTIONS.SET_APP_MODE, payload: APP_MODE.NEURO });
+    navigate(VIEWS.CARD_GENERATION);
+  };
+
+  const enterSchoolMode = () => {
+    dispatch({ type: ACTIONS.SET_APP_MODE, payload: APP_MODE.SCHOOL });
+    navigate(VIEWS.SCHOOL_MODE);
+  };
+
+  const enterWorkMode = () => {
+    dispatch({ type: ACTIONS.SET_APP_MODE, payload: APP_MODE.WORK });
+    navigate(VIEWS.WORK_MODE);
   };
 
   return (
@@ -81,34 +94,77 @@ export default function LandingView() {
       {/* Hero */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-16 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold mb-6 border border-primary-200">
-          ◎ Professor-Aware · Quiz-Aligned · High-Yield
+          ◎ Professor-Aware · Quiz-Aligned · Meeting Intelligence
         </div>
 
         <h1 className="text-5xl font-bold text-ink-900 tracking-tight max-w-3xl leading-tight mb-5">
-          Study smarter with cards built from{' '}
-          <span className="text-primary-500">your professor's patterns</span>
+          AI intelligence for{' '}
+          <span className="text-primary-500">school and work</span>
         </h1>
 
         <p className="text-xl text-ink-500 max-w-2xl leading-relaxed mb-10">
-          Upload your neuroscience class materials — syllabus, transcripts, quizzes, slides, notes.
-          NeuroCard AI analyzes how your professor teaches and tests, then generates targeted 3×5 study cards
-          and predicted exam questions.
+          Generate high-yield study cards from your class materials, extract importance-scored insights
+          from lecture transcripts, and turn meeting chaos into decisions and action items — all in one app.
         </p>
 
-        <div className="flex gap-4 flex-wrap justify-center mb-4">
-          <button
-            onClick={() => navigate('course_setup')}
-            className="px-8 py-3.5 bg-primary-500 text-white rounded-xl font-semibold text-base hover:bg-primary-600 active:bg-primary-700 transition-colors shadow-lg shadow-primary-500/20"
-          >
-            Start New Course →
-          </button>
-          <button
-            onClick={loadDemo}
-            className="px-8 py-3.5 bg-surface-0 text-ink-700 rounded-xl font-semibold text-base hover:bg-surface-100 transition-colors border border-surface-200"
-          >
-            Load Demo Course
-          </button>
+        {/* Three mode cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl w-full mb-8">
+          {[
+            {
+              icon: '🧠',
+              title: 'NeuroCards',
+              desc: 'Professor-aware 3×5 study cards from your class materials',
+              cta: 'Start Course →',
+              onClick: () => navigate(VIEWS.COURSE_SETUP),
+              demo: { label: 'Load Demo', onClick: loadDemo },
+              accent: 'border-primary-300 bg-primary-50',
+              ctaClass: 'bg-primary-500 hover:bg-primary-600 text-white',
+            },
+            {
+              icon: '📚',
+              title: 'School Mode',
+              desc: 'Paste a lecture transcript — AI scores what matters and builds flashcards',
+              cta: 'Open School Mode →',
+              onClick: enterSchoolMode,
+              accent: 'border-violet-300 bg-violet-50',
+              ctaClass: 'bg-violet-600 hover:bg-violet-700 text-white',
+            },
+            {
+              icon: '💼',
+              title: 'Work Mode',
+              desc: 'Extract decisions, action items, and stakeholder signals from meetings',
+              cta: 'Open Work Mode →',
+              onClick: enterWorkMode,
+              accent: 'border-sky-300 bg-sky-50',
+              ctaClass: 'bg-sky-600 hover:bg-sky-700 text-white',
+            },
+          ].map(({ icon, title, desc, cta, onClick, demo, accent, ctaClass }) => (
+            <div key={title} className={`border-2 rounded-2xl p-5 flex flex-col gap-3 ${accent}`}>
+              <div className="text-3xl">{icon}</div>
+              <div>
+                <h3 className="text-sm font-bold text-ink-900 mb-1">{title}</h3>
+                <p className="text-xs text-ink-600 leading-relaxed">{desc}</p>
+              </div>
+              <div className="mt-auto flex flex-col gap-2">
+                <button
+                  onClick={onClick}
+                  className={`w-full py-2 rounded-lg text-sm font-semibold transition-colors ${ctaClass}`}
+                >
+                  {cta}
+                </button>
+                {demo && (
+                  <button
+                    onClick={demo.onClick}
+                    className="w-full py-1.5 rounded-lg text-xs text-ink-500 hover:bg-surface-200 transition-colors"
+                  >
+                    {demo.label}
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
+
         <p className="text-xs text-ink-400">No sign-up required · All data stored locally · Free</p>
 
         {/* Stats bar */}

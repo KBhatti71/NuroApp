@@ -1,4 +1,5 @@
 import { ACTIONS } from './actions';
+import { APP_MODE } from '../constants/modes';
 
 // Deep-merge loaded state with initialState so new fields are always present
 function migrateState(loaded) {
@@ -8,10 +9,16 @@ function migrateState(loaded) {
     analysis: { ...initialState.analysis, ...(loaded.analysis || {}) },
     filters: { ...initialState.filters, ...(loaded.filters || {}) },
     pipeline: initialState.pipeline,
+    // Intelligence layer — safe defaults for new keys
+    appMode:             loaded.appMode             ?? initialState.appMode,
+    sessions:            loaded.sessions            ?? initialState.sessions,
+    activeSessionId:     loaded.activeSessionId     ?? initialState.activeSessionId,
+    sessionAnalysisStatus: initialState.sessionAnalysisStatus,
   };
 }
 
 export const initialState = {
+  // ── Existing fields ──────────────────────────────────────────────────────
   currentView: 'landing',
   course: null,
   courseMap: null,
@@ -39,15 +46,43 @@ export const initialState = {
     pinnedOnly: false,
   },
   sidebarCollapsed: false,
+
+  // ── Intelligence Layer ───────────────────────────────────────────────────
+  /** 'neuro' | 'school' | 'work' — which product experience is active */
+  appMode: APP_MODE.NEURO,
+
+  /**
+   * sessions[] — persisted list of captured lectures / meetings.
+   * Each session shape:
+   * {
+   *   id: uuid,
+   *   mode: 'school' | 'work',
+   *   type: SESSION_TYPE.*,
+   *   title: string,
+   *   rawText: string,        // paste-in transcript / notes
+   *   analysis: object|null,  // result from lectureAnalyzer / meetingAnalyzer
+   *   analysisError: string|null,
+   *   createdAt: ISO string,
+   * }
+   */
+  sessions: [],
+  activeSessionId: null,
+
+  /** 'idle' | 'running' | 'complete' | 'error' — for the session-level AI call */
+  sessionAnalysisStatus: 'idle',
 };
 
 export function appReducer(state, action) {
   switch (action.type) {
+
     case ACTIONS.SET_VIEW:
       return { ...state, currentView: action.payload };
 
     case ACTIONS.TOGGLE_SIDEBAR:
       return { ...state, sidebarCollapsed: !state.sidebarCollapsed };
+
+    case ACTIONS.SET_APP_MODE:
+      return { ...state, appMode: action.payload };
 
     case ACTIONS.SET_COURSE:
       return { ...state, course: action.payload };
@@ -100,10 +135,7 @@ export function appReducer(state, action) {
       };
 
     case ACTIONS.PIPELINE_RESET:
-      return {
-        ...state,
-        pipeline: initialState.pipeline,
-      };
+      return { ...state, pipeline: initialState.pipeline };
 
     case ACTIONS.SET_ANALYSIS:
       return {
@@ -161,13 +193,64 @@ export function appReducer(state, action) {
       return { ...state, studyMode: action.payload };
 
     case ACTIONS.SET_FILTER:
-      return {
-        ...state,
-        filters: { ...state.filters, ...action.payload },
-      };
+      return { ...state, filters: { ...state.filters, ...action.payload } };
 
     case ACTIONS.RESET_FILTERS:
       return { ...state, filters: initialState.filters };
+
+    // ── Intelligence Layer ─────────────────────────────────────────────────
+
+    case ACTIONS.ADD_SESSION:
+      return { ...state, sessions: [action.payload, ...state.sessions] };
+
+    case ACTIONS.UPDATE_SESSION:
+      return {
+        ...state,
+        sessions: state.sessions.map(s =>
+          s.id === action.payload.id ? { ...s, ...action.payload.updates } : s
+        ),
+      };
+
+    case ACTIONS.DELETE_SESSION:
+      return {
+        ...state,
+        sessions: state.sessions.filter(s => s.id !== action.payload),
+        activeSessionId:
+          state.activeSessionId === action.payload ? null : state.activeSessionId,
+      };
+
+    case ACTIONS.SET_ACTIVE_SESSION:
+      return { ...state, activeSessionId: action.payload };
+
+    case ACTIONS.SESSION_ANALYSIS_START:
+      return { ...state, sessionAnalysisStatus: 'running' };
+
+    case ACTIONS.SET_SESSION_ANALYSIS:
+      return {
+        ...state,
+        sessionAnalysisStatus: 'idle',
+        sessions: state.sessions.map(s =>
+          s.id === action.payload.id
+            ? { ...s, analysis: action.payload.analysis, analysisError: null }
+            : s
+        ),
+      };
+
+    case ACTIONS.SESSION_ANALYSIS_COMPLETE:
+      return { ...state, sessionAnalysisStatus: 'complete' };
+
+    case ACTIONS.SESSION_ANALYSIS_ERROR:
+      return {
+        ...state,
+        sessionAnalysisStatus: 'error',
+        sessions: state.sessions.map(s =>
+          s.id === action.payload.id
+            ? { ...s, analysisError: action.payload.error }
+            : s
+        ),
+      };
+
+    // ── Persistence ────────────────────────────────────────────────────────
 
     case ACTIONS.HYDRATE: {
       if (!action.payload) return state;
