@@ -17,13 +17,14 @@ export default function CardGrid({ cards }) {
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" role="list" aria-label="Study cards">
         {cards.filter(Boolean).map(card => (
-          <StudyCard
-            key={card.id}
-            card={card}
-            onClick={() => setSelectedCard(card)}
-          />
+          <div key={card.id} role="listitem">
+            <StudyCard
+              card={card}
+              onClick={() => setSelectedCard(card)}
+            />
+          </div>
         ))}
       </div>
 

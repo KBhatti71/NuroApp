@@ -72,34 +72,38 @@ export default function CardDetailModal({ card, isOpen, onClose }) {
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handlePin}
+              aria-label={card.pinned ? 'Unpin card' : 'Pin card'}
+              aria-pressed={card.pinned}
               className={`w-8 h-8 flex items-center justify-center rounded-lg text-sm transition-colors ${
                 card.pinned ? 'text-warn-400 bg-warn-50' : 'text-ink-400 hover:bg-surface-100'
               }`}
-              title={card.pinned ? 'Unpin' : 'Pin'}
             >
-              ★
+              <span aria-hidden="true">★</span>
             </button>
             <button
               onClick={() => navigator.clipboard.writeText(`${card.topic}\n\n${card.coreIdea}`)}
+              aria-label="Copy card text to clipboard"
               className="w-8 h-8 flex items-center justify-center rounded-lg text-ink-400 hover:bg-surface-100 text-xs transition-colors"
-              title="Copy card text"
             >
-              ⎘
+              <span aria-hidden="true">⎘</span>
             </button>
             <button
               onClick={onClose}
+              aria-label="Close card detail"
               className="w-8 h-8 flex items-center justify-center rounded-lg text-ink-400 hover:bg-surface-100 text-lg transition-colors"
             >
-              ×
+              <span aria-hidden="true">×</span>
             </button>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mt-4">
+        <div role="tablist" aria-label="Card view tabs" className="flex gap-1 mt-4">
           {TABS.map(tab => (
             <button
               key={tab}
+              role="tab"
+              aria-selected={activeTab === tab}
               onClick={() => { setActiveTab(tab); if (tab === 'Edit') setEditedCard({ ...card }); }}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
                 activeTab === tab
