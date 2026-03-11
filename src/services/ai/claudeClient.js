@@ -37,13 +37,14 @@ async function getClient() {
  *
  * @param {string} systemPrompt
  * @param {string} userPrompt
+ * @param {number} [maxTokens]   - Override the default MAX_TOK for this call.
  * @returns {Promise<string>} The assistant's text reply.
  */
-export async function generateText(systemPrompt, userPrompt) {
+export async function generateText(systemPrompt, userPrompt, maxTokens = MAX_TOK) {
   const client = await getClient();
   const message = await client.messages.create({
     model: MODEL,
-    max_tokens: MAX_TOK,
+    max_tokens: maxTokens,
     system: systemPrompt,
     messages: [{ role: 'user', content: userPrompt }],
   });
@@ -56,12 +57,14 @@ export async function generateText(systemPrompt, userPrompt) {
  *
  * @param {string} systemPrompt
  * @param {string} userPrompt
+ * @param {number} [maxTokens]   - Override the default MAX_TOK for this call.
  * @returns {Promise<unknown>} Parsed JSON value.
  */
-export async function generateJSON(systemPrompt, userPrompt) {
-  const raw = await generateText(systemPrompt, userPrompt);
-  // Strip markdown code fences the model sometimes wraps around JSON
-  const stripped = raw.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/i, '').trim();
+export async function generateJSON(systemPrompt, userPrompt, maxTokens = MAX_TOK) {
+  const raw = await generateText(systemPrompt, userPrompt, maxTokens);
+  // Strip markdown code fences the model sometimes wraps around JSON,
+  // accounting for optional leading/trailing whitespace around the fences.
+  const stripped = raw.replace(/^\s*```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
   try {
     return JSON.parse(stripped);
   } catch {

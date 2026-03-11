@@ -82,7 +82,9 @@ export async function analyzeLecture(rawText, title, sessionType = 'lecture') {
     try {
       const system = buildLectureSystemPrompt(sessionType);
       const user   = buildLectureUserPrompt(rawText, title);
-      return await generateJSON(system, user);
+      // Use 4096 tokens — the lecture schema (concepts, flashcards, questions, etc.)
+      // exceeds the 1024-token default and causes truncated/invalid JSON responses.
+      return await generateJSON(system, user, 4096);
     } catch (err) {
       console.warn('[lectureAnalyzer] LLM failed, using heuristic fallback:', err.message);
     }
