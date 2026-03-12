@@ -67,15 +67,19 @@ function QuizCard({ card }) {
   );
 }
 
-export default function QuizPredictorMode({ cards }) {
+export default function QuizPredictorMode({ cards, professorStyle }) {
   const sorted = [...cards].sort((a, b) => b.quizLikelihood - a.quizLikelihood);
+  const profName = professorStyle?.detectedName || 'your professor';
+  const dominantFormat = professorStyle?.dominantQuizFormat
+    ? `${professorStyle.dominantQuizFormat.replace(/_/g, '-')} format`
+    : 'detected quiz patterns';
 
   return (
     <div className="max-w-3xl mx-auto">
       <div className="mb-5 p-4 bg-indigo-50 border border-indigo-100 rounded-xl">
         <p className="text-sm text-indigo-800">
-          <strong>Quiz Predictor</strong> — Based on Dr. Chen's detected quiz patterns (case-vignette format,
-          clinical bias, application depth). Questions are predicted from cross-source analysis and past quiz style.
+          <strong>Quiz Predictor</strong> — Based on {profName}&apos;s {dominantFormat}.
+          Questions are predicted from cross-source analysis and past quiz style.
         </p>
       </div>
 

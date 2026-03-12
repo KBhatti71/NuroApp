@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useAppContext, useNav } from '../hooks/useAppContext';
 import { ACTIONS } from '../context/actions';
+import { VIEWS } from '../constants/views';
 import Button from '../components/ui/Button';
 
 export default function CourseSetupView() {
@@ -39,7 +40,7 @@ export default function CourseSetupView() {
       },
     });
 
-    navigate('import');
+    navigate(VIEWS.IMPORT);
   };
 
   const inputCls = 'w-full px-4 py-3 bg-surface-0 border border-surface-200 rounded-xl text-sm text-ink-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow placeholder:text-ink-300';
@@ -49,7 +50,7 @@ export default function CourseSetupView() {
       <div className="w-full max-w-lg">
         {/* Back link */}
         <button
-          onClick={() => navigate('landing')}
+          onClick={() => navigate(VIEWS.LANDING)}
           className="flex items-center gap-1.5 text-sm text-ink-500 hover:text-ink-900 mb-8 transition-colors"
         >
           ← Back

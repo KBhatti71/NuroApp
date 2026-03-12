@@ -67,10 +67,10 @@ export async function exportToPDF(cards, options = {}) {
     // Unit badge
     doc.setFontSize(5.5);
     doc.setTextColor(...COLORS.label);
-    doc.text(card.unit.toUpperCase(), MARGIN, y);
+    doc.text((card.unit ?? '').toUpperCase(), MARGIN, y);
 
     // Quiz likelihood
-    const likelihoodText = `QUIZ LIKELIHOOD: ${card.quizLikelihood}%`;
+    const likelihoodText = `QUIZ LIKELIHOOD: ${card.quizLikelihood ?? 0}%`;
     doc.text(likelihoodText, PAGE_W - MARGIN, y, { align: 'right' });
 
     y += 0.14;
@@ -106,18 +106,18 @@ export async function exportToPDF(cards, options = {}) {
       y += lines.length * 0.1 + 0.06;
     };
 
-    addSection('Core Idea', card.coreIdea, 3);
-    addSection('Key Terms', card.keyTerms.map(kt => `${kt.term}: ${kt.definition}`).join(' • '), 2);
-    addSection('Mechanism', card.mechanism.split('\n').slice(0, 4).join(' '), 2);
-    addSection('Clinical', card.clinicalTieIn, 2);
-    addSection('Memory Hook', card.memoryHook, 1);
-    addSection('Likely Question', card.likelyExamQuestion, 2);
+    addSection('Core Idea', card.coreIdea ?? '', 3);
+    addSection('Key Terms', (card.keyTerms ?? []).map(kt => `${kt.term}: ${kt.definition}`).join(' • '), 2);
+    addSection('Mechanism', (card.mechanism ?? '').split('\n').slice(0, 4).join(' '), 2);
+    addSection('Clinical', card.clinicalTieIn ?? '', 2);
+    addSection('Memory Hook', card.memoryHook ?? '', 1);
+    addSection('Likely Question', card.likelyExamQuestion ?? '', 2);
 
     // Footer
     doc.setFontSize(5);
     doc.setTextColor(...COLORS.label);
     doc.text('NeuroCard AI', MARGIN, PAGE_H - 0.1);
-    doc.text(card.tags.slice(0, 3).join(' · '), PAGE_W - MARGIN, PAGE_H - 0.1, { align: 'right' });
+    doc.text((card.tags ?? []).slice(0, 3).join(' · '), PAGE_W - MARGIN, PAGE_H - 0.1, { align: 'right' });
   });
 
   const filename = (options.filename || 'neurocard-study') + '.pdf';
@@ -166,29 +166,31 @@ export function triggerPrint(cards, course) {
 </style>
 </head>
 <body>
-${cards.map(card => `
+${cards.map(card => {
+  const clinical = card.clinicalTieIn ?? '';
+  return `
 <div class="card">
-  <div class="likelihood">Quiz Likelihood: ${card.quizLikelihood}%</div>
-  <div class="unit">${card.unit}</div>
-  <div class="topic">${card.topic}</div>
+  <div class="likelihood">Quiz Likelihood: ${card.quizLikelihood ?? 0}%</div>
+  <div class="unit">${card.unit ?? ''}</div>
+  <div class="topic">${card.topic ?? ''}</div>
   <div class="label">Core Idea</div>
-  <div class="content">${card.coreIdea}</div>
+  <div class="content">${card.coreIdea ?? ''}</div>
   <div class="grid">
     <div>
       <div class="label">Key Terms</div>
-      <div class="content">${card.keyTerms.slice(0,3).map(kt => `<b>${kt.term}:</b> ${kt.definition}`).join('<br>')}</div>
+      <div class="content">${(card.keyTerms ?? []).slice(0,3).map(kt => `<b>${kt.term}:</b> ${kt.definition}`).join('<br>')}</div>
     </div>
     <div>
       <div class="label">Clinical Tie-In</div>
-      <div class="content">${card.clinicalTieIn.slice(0, 200)}${card.clinicalTieIn.length > 200 ? '...' : ''}</div>
+      <div class="content">${clinical.slice(0, 200)}${clinical.length > 200 ? '...' : ''}</div>
     </div>
   </div>
   <div class="label">Memory Hook</div>
-  <div class="content">${card.memoryHook}</div>
+  <div class="content">${card.memoryHook ?? ''}</div>
   <div class="label">Likely Exam Question</div>
-  <div class="content">${card.likelyExamQuestion}</div>
+  <div class="content">${card.likelyExamQuestion ?? ''}</div>
 </div>
-`).join('')}
+`;}).join('')}
 </body>
 </html>`;
 

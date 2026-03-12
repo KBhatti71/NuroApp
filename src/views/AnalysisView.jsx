@@ -1,4 +1,5 @@
 import { useAppContext, useNav } from '../hooks/useAppContext';
+import { VIEWS } from '../constants/views';
 import PipelineProgress from '../components/analysis/PipelineProgress';
 import ProfessorStylePanel from '../components/analysis/ProfessorStylePanel';
 import QuizPatternPanel from '../components/analysis/QuizPatternPanel';
@@ -30,7 +31,7 @@ export default function AnalysisView() {
         <p className="text-ink-500 text-sm mb-6 max-w-sm">
           Import materials and run the analysis pipeline to see professor style detection and concept scoring.
         </p>
-        <Button onClick={() => navigate('import')}>Import Materials →</Button>
+        <Button onClick={() => navigate(VIEWS.IMPORT)}>Import Materials →</Button>
       </div>
     );
   }
@@ -58,7 +59,7 @@ export default function AnalysisView() {
 
       {/* Action */}
       <div className="flex justify-end">
-        <Button onClick={() => navigate('card_generation')} size="lg">
+        <Button onClick={() => navigate(VIEWS.CARD_GENERATION)} size="lg">
           View Generated Cards →
         </Button>
       </div>

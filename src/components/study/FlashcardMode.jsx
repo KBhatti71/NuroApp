@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import StudyCardFlip from '../cards/StudyCardFlip';
 import ProgressBar from '../ui/ProgressBar';
 
@@ -7,10 +7,14 @@ export default function FlashcardMode({ cards }) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [seen, setSeen] = useState(new Set());
 
+  // Ref keeps the keyboard handler stable while always reading the current index.
+  const indexRef = useRef(index);
+  useEffect(() => { indexRef.current = index; }, [index]);
+
   const current = cards[index];
 
   const next = () => {
-    setSeen(s => new Set([...s, index]));
+    setSeen(s => new Set([...s, indexRef.current]));
     setIsFlipped(false);
     setTimeout(() => setIndex(i => Math.min(i + 1, cards.length - 1)), 100);
   };
@@ -27,15 +31,18 @@ export default function FlashcardMode({ cards }) {
         setIsFlipped(f => !f);
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        next();
+        setSeen(s => new Set([...s, indexRef.current]));
+        setIsFlipped(false);
+        setTimeout(() => setIndex(i => Math.min(i + 1, cards.length - 1)), 100);
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        prev();
+        setIsFlipped(false);
+        setTimeout(() => setIndex(i => Math.max(i - 1, 0)), 100);
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [index, cards.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cards.length]);
 
   const restart = () => {
     setIndex(0);
