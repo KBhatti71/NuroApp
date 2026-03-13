@@ -7,7 +7,7 @@ export function useStudyMode() {
   const { cards, studyMode, filters } = state;
 
   const filteredCards = useMemo(() => {
-    let result = [...cards];
+    let result = cards.filter(Boolean);
 
     // Apply global filters
     if (filters.unitId) {
@@ -47,7 +47,7 @@ export function useStudyMode() {
           .sort((a, b) => b.quizLikelihood - a.quizLikelihood);
         break;
       case 'syllabus_aligned':
-        result = result.sort((a, b) => a.unitId.localeCompare(b.unitId));
+        result = result.sort((a, b) => (a.unitId ?? '').localeCompare(b.unitId ?? ''));
         break;
       case 'flashcard':
       case 'quiz_predictor':
@@ -73,5 +73,5 @@ export function useStudyMode() {
     dispatch({ type: ACTIONS.RESET_FILTERS });
   };
 
-  return { filteredCards, studyMode, setMode, setFilter, resetFilters, allCards: cards };
+  return { filteredCards, studyMode, filters, setMode, setFilter, resetFilters, allCards: cards.filter(Boolean) };
 }

@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { useStudyMode } from '../hooks/useStudyMode';
 import { useAppContext, useNav } from '../hooks/useAppContext';
+import { VIEWS } from '../constants/views';
 import FlashcardMode from '../components/study/FlashcardMode';
 import ExamCramMode from '../components/study/ExamCramMode';
 import QuizPredictorMode from '../components/study/QuizPredictorMode';
@@ -17,11 +19,20 @@ const MODES = [
   { id: 'syllabus_aligned', label: 'Syllabus Order', icon: '→', desc: 'Ordered by unit & week' },
 ];
 
+const VALID_MODES = new Set(['flashcard', 'exam_cram', 'quiz_predictor', 'professor_wording', 'clinical_focus', 'conceptual', 'syllabus_aligned']);
+
 export default function StudyModesView() {
   const { filteredCards, studyMode, setMode } = useStudyMode();
   const { state } = useAppContext();
   const navigate = useNav();
   const { analysis } = state;
+
+  // Auto-select flashcard mode when arriving with no valid mode set (e.g. initial state 'all').
+  useEffect(() => {
+    if (!VALID_MODES.has(studyMode)) {
+      setMode('flashcard');
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (filteredCards.length === 0 && state.cards.length === 0) {
     return (
@@ -29,7 +40,7 @@ export default function StudyModesView() {
         <div className="text-4xl mb-4 opacity-30">◈</div>
         <h2 className="text-lg font-semibold text-ink-900 mb-2">No Cards to Study</h2>
         <p className="text-sm text-ink-500 mb-5">Generate cards first from your course materials.</p>
-        <Button onClick={() => navigate('import')}>Import Materials →</Button>
+        <Button onClick={() => navigate(VIEWS.IMPORT)}>Import Materials →</Button>
       </div>
     );
   }
@@ -65,7 +76,7 @@ export default function StudyModesView() {
       {/* Mode content */}
       {studyMode === 'flashcard' && <FlashcardMode cards={filteredCards} />}
       {studyMode === 'exam_cram' && <ExamCramMode cards={filteredCards} />}
-      {studyMode === 'quiz_predictor' && <QuizPredictorMode cards={filteredCards} />}
+      {studyMode === 'quiz_predictor' && <QuizPredictorMode cards={filteredCards} professorStyle={analysis.professorStyle} />}
       {studyMode === 'professor_wording' && (
         <ProfessorWordingMode cards={filteredCards} professorStyle={analysis.professorStyle} />
       )}

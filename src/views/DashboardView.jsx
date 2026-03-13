@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useAppContext, useNav } from '../hooks/useAppContext';
 import { usePipeline } from '../hooks/usePipeline';
+import { VIEWS } from '../constants/views';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 
@@ -87,7 +88,7 @@ export default function DashboardView() {
           </div>
 
           <div className="flex gap-2 flex-wrap">
-            <Button variant="secondary" onClick={() => navigate('import')} size="sm">
+            <Button variant="secondary" onClick={() => navigate(VIEWS.IMPORT)} size="sm">
               + Add Materials
             </Button>
             {sources.length > 0 && !hasCards && (
@@ -96,7 +97,7 @@ export default function DashboardView() {
               </Button>
             )}
             {hasCards && (
-              <Button onClick={() => navigate('study_modes')} size="sm">
+              <Button onClick={() => navigate(VIEWS.STUDY_MODES)} size="sm">
                 Study Now →
               </Button>
             )}
@@ -151,7 +152,7 @@ export default function DashboardView() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate('card_generation')}
+                  onClick={() => navigate(VIEWS.CARD_GENERATION)}
                 >
                   View all cards →
                 </Button>
@@ -198,7 +199,7 @@ export default function DashboardView() {
               variant="ghost"
               size="sm"
               className="mt-3 -ml-2"
-              onClick={() => navigate('analysis')}
+              onClick={() => navigate(VIEWS.ANALYSIS)}
             >
               View full analysis →
             </Button>
@@ -210,11 +211,11 @@ export default function DashboardView() {
           <h3 className="text-sm font-semibold text-ink-900 mb-3">Quick Actions</h3>
           <div className="space-y-2">
             {[
-              { label: 'Import more materials', action: () => navigate('import'), icon: '↑' },
-              { label: 'View intelligence analysis', action: () => navigate('analysis'), icon: '◎' },
-              { label: 'Browse study cards', action: () => navigate('card_generation'), icon: '▣' },
-              { label: 'Start flashcard mode', action: () => { navigate('study_modes'); }, icon: '◈' },
-              { label: 'Export cards as PDF', action: () => navigate('export'), icon: '↗' },
+              { label: 'Import more materials', action: () => navigate(VIEWS.IMPORT), icon: '↑' },
+              { label: 'View intelligence analysis', action: () => navigate(VIEWS.ANALYSIS), icon: '◎' },
+              { label: 'Browse study cards', action: () => navigate(VIEWS.CARD_GENERATION), icon: '▣' },
+              { label: 'Start flashcard mode', action: () => { navigate(VIEWS.STUDY_MODES); }, icon: '◈' },
+              { label: 'Export cards as PDF', action: () => navigate(VIEWS.EXPORT), icon: '↗' },
             ].map(({ label, action, icon }) => (
               <button
                 key={label}

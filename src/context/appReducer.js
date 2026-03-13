@@ -6,6 +6,7 @@ function migrateState(loaded) {
   return {
     ...initialState,
     ...loaded,
+    cards: Array.isArray(loaded.cards) ? loaded.cards.filter(Boolean) : initialState.cards,
     analysis: { ...initialState.analysis, ...(loaded.analysis || {}) },
     filters: { ...initialState.filters, ...(loaded.filters || {}) },
     pipeline: initialState.pipeline,

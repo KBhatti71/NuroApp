@@ -14,7 +14,9 @@ export default function CardFilters() {
     <div className="flex flex-wrap items-center gap-3 p-4 bg-surface-0 border border-surface-200 rounded-xl">
       {/* Search */}
       <div className="flex-1 min-w-40">
+        <label htmlFor="card-search" className="sr-only">Search cards by topic or term</label>
         <input
+          id="card-search"
           type="text"
           placeholder="Search topics, terms..."
           value={filters.searchQuery}
@@ -26,6 +28,7 @@ export default function CardFilters() {
       {/* Unit filter */}
       {units.length > 0 && (
         <select
+          aria-label="Filter by unit"
           value={filters.unitId || ''}
           onChange={(e) => setFilter({ unitId: e.target.value || null })}
           className="px-3 py-2 bg-surface-50 border border-surface-200 rounded-lg text-sm text-ink-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -39,17 +42,22 @@ export default function CardFilters() {
 
       {/* Quiz likelihood slider */}
       <div className="flex items-center gap-2 min-w-36">
-        <span className="text-xs text-ink-500 shrink-0">Min ★</span>
+        <label htmlFor="likelihood-slider" className="text-xs text-ink-500 shrink-0">
+          <span aria-hidden="true">Min ★</span>
+          <span className="sr-only">Minimum quiz likelihood</span>
+        </label>
         <input
+          id="likelihood-slider"
           type="range"
           min={0}
           max={90}
           step={5}
           value={filters.minQuizLikelihood}
           onChange={(e) => setFilter({ minQuizLikelihood: Number(e.target.value) })}
+          aria-valuetext={filters.minQuizLikelihood > 0 ? `${filters.minQuizLikelihood}%` : 'Any'}
           className="w-24 accent-primary-500"
         />
-        <span className="text-xs font-medium text-ink-700 w-8 shrink-0">
+        <span className="text-xs font-medium text-ink-700 w-8 shrink-0" aria-live="polite">
           {filters.minQuizLikelihood > 0 ? `${filters.minQuizLikelihood}%` : 'Any'}
         </span>
       </div>
@@ -57,13 +65,14 @@ export default function CardFilters() {
       {/* Pinned toggle */}
       <button
         onClick={() => setFilter({ pinnedOnly: !filters.pinnedOnly })}
+        aria-pressed={filters.pinnedOnly}
         className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
           filters.pinnedOnly
             ? 'bg-warn-100 text-yellow-700 border border-warn-100'
             : 'bg-surface-50 text-ink-600 border border-surface-200 hover:bg-surface-100'
         }`}
       >
-        ★ Pinned only
+        <span aria-hidden="true">★</span> Pinned only
       </button>
 
       {/* Reset */}

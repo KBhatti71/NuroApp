@@ -27,14 +27,15 @@ function ProfText({ text, terms: _terms }) {
 
 export default function ProfessorWordingMode({ cards, professorStyle }) {
   const signatureTerms = professorStyle?.signatureTerms || [];
+  const profName = professorStyle?.detectedName || 'your professor';
 
   return (
     <div className="max-w-3xl mx-auto space-y-4">
       <div className="p-4 bg-teal-50 border border-teal-100 rounded-xl mb-2">
         <p className="text-sm text-teal-800">
-          <strong>Professor Wording</strong> — Cards reframed in Dr. Chen's detected language and emphasis patterns.
+          <strong>Professor Wording</strong> — Cards reframed in {profName}&apos;s detected language and emphasis patterns.
           <span className="bg-primary-100 text-primary-800 rounded px-0.5 font-semibold text-xs ml-2">highlighted terms</span>
-          {' '}are her signature phrases.
+          {' '}are their signature phrases.
         </p>
       </div>
 

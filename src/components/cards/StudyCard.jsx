@@ -38,7 +38,11 @@ export default function StudyCard({ card, onClick, compact = false }) {
   return (
     <div
       onClick={onClick}
-      className="relative bg-surface-0 rounded-xl border border-surface-200 shadow-card hover:shadow-card-hover transition-all cursor-pointer group overflow-hidden pb-1"
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onClick?.()}
+      role="article"
+      tabIndex={0}
+      aria-label={`Study card: ${card.topic}`}
+      className="relative bg-surface-0 rounded-xl border border-surface-200 shadow-card hover:shadow-card-hover transition-all cursor-pointer group overflow-hidden pb-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
     >
       {/* Top accent bar with unit color */}
       <div className="h-1 rounded-t-xl" style={{ backgroundColor: unitColor }} />
@@ -56,26 +60,28 @@ export default function StudyCard({ card, onClick, compact = false }) {
               </span>
               <span
                 className="px-2 py-0.5 rounded text-xs font-bold"
+                aria-label={`Quiz likelihood: ${card.quizLikelihood}%`}
                 style={{
                   backgroundColor: card.quizLikelihood >= 85 ? '#dcfce7' : card.quizLikelihood >= 70 ? '#fef3c7' : '#fee2e2',
                   color: card.quizLikelihood >= 85 ? '#15803d' : card.quizLikelihood >= 70 ? '#92400e' : '#dc2626',
                 }}
               >
-                ★ {card.quizLikelihood}%
+                <span aria-hidden="true">★</span> {card.quizLikelihood}%
               </span>
             </div>
             <h3 className="text-sm font-bold text-ink-900 leading-tight">{card.topic}</h3>
           </div>
           <button
             onClick={handlePin}
+            aria-label={card.pinned ? 'Unpin card' : 'Pin card'}
+            aria-pressed={card.pinned}
             className={`shrink-0 w-7 h-7 flex items-center justify-center rounded-lg transition-all text-sm ${
               card.pinned
                 ? 'text-warn-400 bg-warn-50'
                 : 'text-ink-300 opacity-0 group-hover:opacity-100 hover:text-warn-400 hover:bg-warn-50'
             }`}
-            title={card.pinned ? 'Unpin' : 'Pin card'}
           >
-            ★
+            <span aria-hidden="true">★</span>
           </button>
         </div>
 

@@ -8,34 +8,46 @@ import Spinner from '../components/ui/Spinner';
 function ExportOption({ icon, title, desc, action, color }) {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [error, setError] = useState('');
 
   const handleClick = async () => {
     setLoading(true);
-    await action();
-    setLoading(false);
-    setDone(true);
-    setTimeout(() => setDone(false), 2000);
+    setError('');
+    try {
+      await action();
+      setDone(true);
+      setTimeout(() => setDone(false), 2000);
+    } catch (err) {
+      setError(err.message || 'Export failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <button
-      onClick={handleClick}
-      disabled={loading}
-      className="text-left w-full p-5 bg-surface-0 border border-surface-200 rounded-xl hover:border-primary-300 hover:shadow-card-hover transition-all group"
-    >
-      <div className="flex items-start gap-4">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 ${color}`}>
-          {loading ? <Spinner size="sm" /> : done ? '✓' : icon}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold text-ink-900 group-hover:text-primary-600 transition-colors">
-            {done ? 'Done!' : title}
+    <div className="space-y-1">
+      <button
+        onClick={handleClick}
+        disabled={loading}
+        className="text-left w-full p-5 bg-surface-0 border border-surface-200 rounded-xl hover:border-primary-300 hover:shadow-card-hover transition-all group disabled:opacity-60 disabled:cursor-not-allowed"
+      >
+        <div className="flex items-start gap-4">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 ${color}`}>
+            {loading ? <Spinner size="sm" /> : done ? '✓' : icon}
           </div>
-          <div className="text-xs text-ink-500 mt-0.5">{desc}</div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-ink-900 group-hover:text-primary-600 transition-colors">
+              {done ? 'Done!' : title}
+            </div>
+            <div className="text-xs text-ink-500 mt-0.5">{desc}</div>
+          </div>
+          <span className="text-ink-300 group-hover:text-primary-400 transition-colors text-sm">→</span>
         </div>
-        <span className="text-ink-300 group-hover:text-primary-400 transition-colors text-sm">→</span>
-      </div>
-    </button>
+      </button>
+      {error && (
+        <p role="alert" className="text-xs text-danger-400 px-1">{error}</p>
+      )}
+    </div>
   );
 }
 
@@ -131,7 +143,7 @@ export default function ExportView() {
               <div className="text-ink-400">[{card.unit}] · ★ {card.quizLikelihood}%</div>
               <div className="text-ink-900 font-bold text-sm font-sans">{card.topic}</div>
               <div className="text-ink-600 font-sans leading-relaxed">
-                {card.coreIdea.slice(0, 120)}...
+                {(card.coreIdea ?? '').slice(0, 120)}{(card.coreIdea?.length ?? 0) > 120 ? '...' : ''}
               </div>
               <div className="flex gap-2 pt-1">
                 {card.keyTerms?.slice(0, 3).map(kt => (
