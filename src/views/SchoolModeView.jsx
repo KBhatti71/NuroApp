@@ -10,31 +10,47 @@ import ImportanceBadge from '../components/intelligence/ImportanceBadge';
 import MomentCard from '../components/intelligence/MomentCard';
 import Spinner from '../components/ui/Spinner';
 
+/**
+ * Converts session flashcards to full study cards, enriching each card with
+ * matching concept data (keyTerms, memoryHook) where available.
+ */
 function flashcardsToCards(flashcards, session) {
+  const concepts = session.analysis?.concepts ?? [];
+
   return flashcards
     .filter(f => f.front && f.back)
-    .map(f => ({
-      id: uuid(),
-      unitId: null,
-      topic: session.title,
-      coreIdea: f.back,
-      keyTerms: [],
-      mechanism: '',
-      clinicalTieIn: '',
-      professorEmphasis: '',
-      memoryHook: '',
-      likelyExamQuestion: f.front,
-      likelyExamAnswer: f.back,
-      quizLikelihood: Math.round(f.importance ?? 60) / 100,
-      pinned: false,
-      tags: [session.type, 'school'],
-      sourceReferences: [session.id],
-      createdAt: new Date().toISOString(),
-      studyModeVariants: {
-        professorWording: f.back,
-        examCram: f.front,
-      },
-    }));
+    .map(f => {
+      // Try to match a concept by comparing the flashcard front text
+      const frontLower = f.front.toLowerCase();
+      const matched = concepts.find(c =>
+        c.name && frontLower.includes(c.name.toLowerCase())
+      );
+
+      return {
+        id: uuid(),
+        unitId: null,
+        topic: session.title,
+        coreIdea: f.back,
+        keyTerms: matched
+          ? [{ term: matched.name, definition: matched.explanation ?? '' }]
+          : [],
+        mechanism: '',
+        clinicalTieIn: '',
+        professorEmphasis: matched?.importanceReason ?? '',
+        memoryHook: '',
+        likelyExamQuestion: f.front,
+        likelyExamAnswer: f.back,
+        quizLikelihood: Math.round(f.importance ?? 60) / 100,
+        pinned: false,
+        tags: [session.type, 'school'],
+        sourceReferences: [session.id],
+        createdAt: new Date().toISOString(),
+        studyModeVariants: {
+          professorWording: matched?.explanation ?? f.back,
+          examCram: f.front,
+        },
+      };
+    });
 }
 
 const SCHOOL_SESSION_TYPES = Object.entries(SESSION_TYPE_META)
@@ -99,9 +115,15 @@ function NewSessionForm({ onCreate, collapsed, onToggle }) {
       </div>
 
       <div>
-        <label className="text-xs text-ink-500 font-medium block mb-1">
-          Paste transcript, notes, or summary
-        </label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="text-xs text-ink-500 font-medium">
+            Paste transcript, notes, or summary
+          </label>
+          <span className={`text-[10px] font-mono ${rawText.length > 10000 ? 'text-amber-500' : 'text-ink-400'}`}>
+            {rawText.length.toLocaleString()} chars
+            {rawText.length > 10000 && ' — very long; only first ~12K chars analysed'}
+          </span>
+        </div>
         <textarea
           value={rawText}
           onChange={e => setRawText(e.target.value)}
@@ -218,6 +240,77 @@ function CrossRefList({ crossReferences }) {
             <span className="text-ink-500 leading-relaxed">— {r.relationship}</span>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Interactive Flashcard Deck ───────────────────────────────────────────────
+
+/**
+ * Click-to-flip flashcard deck with navigation arrows.
+ * Each card shows the question on the front and reveals the answer on click.
+ */
+function FlashcardDeck({ flashcards }) {
+  const [index, setIndex]   = useState(0);
+  const [flipped, setFlipped] = useState(false);
+
+  if (!flashcards.length) {
+    return <p className="text-sm text-ink-400 text-center py-6">No flashcards generated.</p>;
+  }
+
+  const card = flashcards[index];
+  const total = flashcards.length;
+
+  const goNext = () => { setIndex(i => (i + 1) % total); setFlipped(false); };
+  const goPrev = () => { setIndex(i => (i - 1 + total) % total); setFlipped(false); };
+
+  return (
+    <div className="space-y-3">
+      {/* Progress */}
+      <div className="flex items-center justify-between text-xs text-ink-400">
+        <span>{index + 1} / {total}</span>
+        <ImportanceBadge score={card.importance ?? 0} compact />
+      </div>
+
+      {/* Card — click to flip */}
+      <button
+        onClick={() => setFlipped(f => !f)}
+        className={`w-full text-left rounded-2xl border-2 transition-all duration-200 min-h-[140px] flex flex-col justify-center px-6 py-5 gap-2
+          ${flipped
+            ? 'bg-primary-50 border-primary-300 shadow-md'
+            : 'bg-surface-50 border-surface-200/70 hover:border-primary-300 hover:bg-primary-50/30'
+          }`}
+        aria-label={flipped ? 'Click to see question' : 'Click to reveal answer'}
+      >
+        <span className={`text-[10px] font-semibold uppercase tracking-widest ${flipped ? 'text-primary-500' : 'text-ink-400'}`}>
+          {flipped ? 'Answer' : 'Question — click to reveal'}
+        </span>
+        <span className="text-sm font-medium text-ink-900 leading-relaxed">
+          {flipped ? card.back : card.front}
+        </span>
+      </button>
+
+      {/* Navigation */}
+      <div className="flex items-center justify-between gap-2">
+        <button
+          onClick={goPrev}
+          className="px-4 py-1.5 text-xs font-semibold text-ink-600 bg-surface-100 hover:bg-surface-200 rounded-lg transition-colors border border-surface-200/70"
+        >
+          ← Prev
+        </button>
+        <button
+          onClick={() => setFlipped(f => !f)}
+          className="flex-1 py-1.5 text-xs font-semibold text-primary-700 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors border border-primary-200/60"
+        >
+          {flipped ? 'Hide Answer' : 'Reveal Answer'}
+        </button>
+        <button
+          onClick={goNext}
+          className="px-4 py-1.5 text-xs font-semibold text-ink-600 bg-surface-100 hover:bg-surface-200 rounded-lg transition-colors border border-surface-200/70"
+        >
+          Next →
+        </button>
       </div>
     </div>
   );
@@ -391,24 +484,7 @@ function SessionPanel({ session, dispatch, toast }) {
       )}
 
       {tab === 'flashcards' && (
-        <div className="space-y-2">
-          {cardCount === 0
-            ? <p className="text-sm text-ink-400 text-center py-6">No flashcards generated.</p>
-            : (analysis.flashcards ?? []).map((f, i) => (
-                <div key={i} className="border border-surface-200/70 rounded-xl overflow-hidden">
-                  <div className="bg-primary-50/80 px-4 py-2 flex items-center justify-between">
-                    <span className="text-xs font-semibold text-primary-700">Front</span>
-                    <ImportanceBadge score={f.importance ?? 0} compact />
-                  </div>
-                  <div className="px-4 py-2 text-sm text-ink-800 font-medium">{f.front}</div>
-                  <div className="bg-surface-50 px-4 py-2 border-t border-surface-100">
-                    <span className="text-xs text-ink-400 block mb-1">Back</span>
-                    <span className="text-sm text-ink-700">{f.back}</span>
-                  </div>
-                </div>
-              ))
-          }
-        </div>
+        <FlashcardDeck flashcards={analysis.flashcards ?? []} />
       )}
 
       {tab === 'questions' && (
@@ -498,11 +574,24 @@ export default function SchoolModeView() {
   const { state, dispatch } = useAppContext();
   const toast = useToast();
   const { sessions, activeSessionId } = state;
-  const [formOpen, setFormOpen] = useState(false);
+  const [formOpen, setFormOpen]           = useState(false);
+  const [sessionSearch, setSessionSearch] = useState('');
 
   const schoolSessions = sessions.filter(s => s.mode === APP_MODE.SCHOOL);
   const hasSession     = schoolSessions.length > 0;
   const activeSession  = schoolSessions.find(s => s.id === activeSessionId) ?? schoolSessions[0] ?? null;
+
+  const filteredSessions = sessionSearch.trim()
+    ? schoolSessions.filter(s =>
+        s.title.toLowerCase().includes(sessionSearch.toLowerCase())
+      )
+    : schoolSessions;
+
+  const handleDeleteSession = (e, id) => {
+    e.stopPropagation();
+    dispatch({ type: ACTIONS.DELETE_SESSION, payload: id });
+    toast('Session deleted', 'info');
+  };
 
   const handleCreate = useCallback(async ({ title, type, rawText }) => {
     const id = uuid();
@@ -561,24 +650,40 @@ export default function SchoolModeView() {
 
           {hasSession && (
             <div className="surface-card p-4">
-              <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-3">Sessions</h4>
+              <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-3">
+                Sessions ({schoolSessions.length})
+              </h4>
+
+              {schoolSessions.length > 3 && (
+                <input
+                  value={sessionSearch}
+                  onChange={e => setSessionSearch(e.target.value)}
+                  placeholder="Search sessions..."
+                  className="w-full mb-2 px-3 py-1.5 text-xs border border-surface-200/70 rounded-lg bg-surface-50/80 focus:outline-none focus:ring-2 focus:ring-primary-300"
+                />
+              )}
+
               <div className="space-y-1">
-                {schoolSessions.map(s => {
+                {filteredSessions.length === 0 && (
+                  <p className="text-xs text-ink-400 text-center py-2">No sessions match.</p>
+                )}
+                {filteredSessions.map(s => {
                   const meta = SESSION_TYPE_META[s.type] ?? {};
                   const topScore = s.analysis?.importantMoments?.[0]?.score ?? 0;
                   const tier = getImportanceTier(topScore);
                   return (
-                    <button
+                    <div
                       key={s.id}
-                      onClick={() => dispatch({ type: ACTIONS.SET_ACTIVE_SESSION, payload: s.id })}
-                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-left transition-colors
+                      className={`group flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-colors cursor-pointer
                         ${activeSession?.id === s.id
                           ? 'bg-primary-50 border border-primary-200 text-primary-700'
                           : 'hover:bg-surface-100 text-ink-700'
                         }`}
+                      onClick={() => dispatch({ type: ACTIONS.SET_ACTIVE_SESSION, payload: s.id })}
                     >
-                      <span>{meta.icon}</span>
-                      <span className="flex-1 truncate font-medium">{s.title}</span>
+                      <span className="shrink-0">{meta.icon}</span>
+                      <span className="flex-1 truncate font-medium text-left">{s.title}</span>
+
                       {s.analysis && !s.analysisError && (
                         <span className="text-xs text-emerald-600 shrink-0">✓</span>
                       )}
@@ -586,11 +691,21 @@ export default function SchoolModeView() {
                         <Spinner size="sm" />
                       )}
                       {topScore > 0 && (
-                        <span className={`text-xs font-bold ${tier.color}`}>
+                        <span className={`text-xs font-bold shrink-0 ${tier.color}`}>
                           {'\u2605'.repeat(tier.stars)}
                         </span>
                       )}
-                    </button>
+
+                      {/* Delete — visible on hover */}
+                      <button
+                        onClick={e => handleDeleteSession(e, s.id)}
+                        title="Delete session"
+                        className="shrink-0 opacity-0 group-hover:opacity-100 text-ink-300 hover:text-danger-500 transition-opacity text-xs leading-none"
+                        aria-label="Delete session"
+                      >
+                        ✕
+                      </button>
+                    </div>
                   );
                 })}
               </div>

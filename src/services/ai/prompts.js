@@ -187,8 +187,11 @@ Rules:
 - Return ONLY raw JSON — no markdown fences, no commentary.
 - \`importance\` scores: 75-100 = exam-critical, 50-74 = high-yield, 25-49 = useful, 0-24 = background.
 - Detect emphasis from: CAPS, repetition, "this will be on the exam", "remember", explicit slow-down signals.
-- Limit: sections up to 6, concepts top 8, flashcards top 10, questions top 5, followUpQuestions top 4, crossReferences top 6.
-- Sections should follow the logical flow of the notes — each section maps to a distinct topic or phase of the lecture.`;
+- Limit: sections up to 8, concepts top 10, flashcards top 15, questions top 8, followUpQuestions top 5, crossReferences top 8.
+- Sections should follow the logical flow of the notes — each section maps to a distinct topic or phase of the lecture.
+- Flashcard fronts must be specific questions (not vague). Prefer "What mechanism does X use?" over "What is X?".
+- Cross-references should link only genuinely related concepts — skip superficial or trivial connections.
+- Confusion moments: flag only text that is itself ambiguous or incomplete — not well-explained content.`;
 }
 
 export function buildLectureUserPrompt(rawText, title) {
@@ -296,7 +299,9 @@ Rules:
 - Return ONLY raw JSON — no markdown fences.
 - Detect importance from: raised voice (CAPS/!), keywords (blocker/urgent/deadline/decision), repetition, disagreements.
 - \`committed: true\` only if person said "I will", "I'll have it", "by [date]", or equivalent.
-- Limit decisions to top 5, action items to top 8, stakeholders to top 6, sections to top 6, followUpQuestions to top 4.
+- Limit decisions to top 7, action items to top 10, stakeholders to top 8, sections to top 8, followUpQuestions to top 5.
+- Action item tasks must be specific and actionable — avoid vague entries like "follow up" with no context.
+- `committed: true` requires an explicit verbal commitment in the transcript — infer from "I will", "I'll", "by [date]", "I'll have it done".
 - Sections should map to natural topic shifts or agenda items in the meeting.`;
 }
 
