@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls \"c:\\\\Users\\\\arab2\\\\OneDrive - Washington State University \\(email.wsu.edu\\)\\\\Documents\\\\WCC llc\\\\Singlepageconsultingwebsite\\\\NuroApp\")",
+      "Bash(npm run:*)",
+      "Bash(cmd.exe /c \"where node 2>&1 && where npm 2>&1\")",
+      "Bash(cmd.exe /c \"echo %PATH%\")"
+    ]
+  }
+}
