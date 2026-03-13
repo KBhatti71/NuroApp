@@ -2,16 +2,22 @@
  * meetingAnalyzer — Work Mode AI service.
  *
  * Analyses a meeting/1:1/standup transcript and extracts:
+ *  - Logical sections (agenda items / topic shifts)
  *  - Decisions (with support/concerns/status)
  *  - Action items (owner, deadline, urgency, committed flag)
  *  - Stakeholder sentiment per person
  *  - Critical moments with 0-100 scores
  *  - Follow-up items that were dropped or need scheduling
+ *  - Follow-up research questions for open issues
+ *  - Cross-references between discussed topics
+ *
+ * After the primary analysis a second enrichment call adds background
+ * context and source suggestions for the top topics/concepts.
  *
  * Falls back to text-based heuristic analysis when AI is disabled.
  */
 
-import { isAIEnabled, generateJSON } from './claudeClient';
+import { isAIEnabled, generateJSON, enrichConcepts } from './claudeClient';
 import { buildMeetingSystemPrompt, buildMeetingUserPrompt } from './prompts';
 import { WORK_KEYWORDS, getImportanceTier } from '../../constants/modes';
 
@@ -51,6 +57,7 @@ function buildMockAnalysis(rawText, title) {
 
   return {
     summary: `Analysis of "${title || 'meeting'}". ${lines.length} content lines processed. Enable real AI (VITE_USE_REAL_AI=true) for full intelligence extraction.`,
+    sections: [],
     decisions: decisionCandidates.slice(0, 3).map((text, i) => ({
       text: text.slice(0, 120),
       support: [],
@@ -74,7 +81,10 @@ function buildMockAnalysis(rawText, title) {
       priority: m.score >= 75 ? 'urgent' : 'normal',
       context: 'Flagged by keyword analysis',
     })),
+    followUpQuestions: [],
+    crossReferences: [],
     importantMoments,
+    enrichment: [],
   };
 }
 
@@ -95,10 +105,18 @@ export async function analyzeMeeting(rawText, title, sessionType = 'meeting') {
     try {
       const system = buildMeetingSystemPrompt(sessionType);
       const user   = buildMeetingUserPrompt(rawText, title);
-      // Use 4096 tokens — the meeting schema (decisions, action items, stakeholders,
-      // criticalMoments, followUps, importantMoments) exceeds the 1024-token default
-      // and causes truncated/invalid JSON responses.
-      return await generateJSON(system, user, 4096);
+      // Increased to 8192 — enriched schema with sections, crossReferences,
+      // followUpQuestions requires more tokens than the base schema.
+      const analysis = await generateJSON(system, user, 8192);
+
+      // Second pass: enrich key topics with background context + sources.
+      const topTopics = [
+        ...(analysis.sections ?? []).slice(0, 3).map(s => s.title),
+        ...(analysis.decisions ?? []).slice(0, 2).map(d => d.text?.slice(0, 60)),
+      ].filter(Boolean).slice(0, 5);
+      analysis.enrichment = await enrichConcepts(topTopics);
+
+      return analysis;
     } catch (err) {
       console.warn('[meetingAnalyzer] LLM failed, using heuristic fallback:', err.message);
     }

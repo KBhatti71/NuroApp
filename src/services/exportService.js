@@ -1,3 +1,135 @@
+/**
+ * triggerSessionPrint — opens a formatted print window for a session's analysis.
+ *
+ * Renders sections, key takeaways, sources, and follow-up questions into a
+ * clean, readable document suited for printing or saving as PDF.
+ *
+ * @param {object} session - Session object { title, type, rawText, analysis }
+ */
+export function triggerSessionPrint(session) {
+  const { title = 'Session', analysis } = session;
+  if (!analysis) throw new Error('Session has not been analysed yet.');
+
+  const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  const sectionsHtml = (analysis.sections ?? []).map(sec => `
+    <section class="section">
+      <h2>${esc(sec.title)}</h2>
+      <p class="section-summary">${esc(sec.summary)}</p>
+      ${(sec.keyPoints ?? []).length ? `<ul>${sec.keyPoints.map(p => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}
+      ${(sec.relatedConcepts ?? []).length
+        ? `<div class="tags">${sec.relatedConcepts.map(c => `<span class="tag">${esc(c)}</span>`).join('')}</div>`
+        : ''}
+    </section>`).join('');
+
+  const takeawaysHtml = (analysis.keyTakeaways ?? []).map((t, i) =>
+    `<li><b>${i + 1}.</b> ${esc(t)}</li>`).join('');
+
+  const enrichmentHtml = (analysis.enrichment ?? []).map(e => `
+    <div class="enrich-block">
+      <h4>${esc(e.concept)}</h4>
+      <p>${esc(e.background)}</p>
+      ${(e.keyFacts ?? []).length ? `<ul class="facts">${e.keyFacts.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
+      ${(e.suggestedSources ?? []).map(s =>
+        `<div class="source">
+          <span class="source-type">${esc(s.type)}</span>
+          ${s.url ? `<a href="${esc(s.url)}" target="_blank">${esc(s.title)}</a>` : `<span>${esc(s.title)}</span>`}
+          <span class="source-relevance"> — ${esc(s.relevance)}</span>
+        </div>`).join('')}
+      ${(e.searchTerms ?? []).length
+        ? `<p class="search-terms"><b>Search:</b> ${e.searchTerms.map(t => `"${esc(t)}"`).join(', ')}</p>`
+        : ''}
+    </div>`).join('');
+
+  const followUpHtml = (analysis.followUpQuestions ?? []).map((q, i) => `
+    <div class="followup">
+      <p class="followup-q"><b>${i + 1}.</b> ${esc(q.question)}</p>
+      <p class="followup-why">${esc(q.why)}</p>
+      ${(q.searchTerms ?? []).length
+        ? `<p class="search-terms"><b>Search:</b> ${q.searchTerms.map(t => `"${esc(t)}"`).join(', ')}</p>`
+        : ''}
+    </div>`).join('');
+
+  const crossRefHtml = (analysis.crossReferences ?? []).map(r => `
+    <tr>
+      <td>${esc(r.from)}</td>
+      <td>↔</td>
+      <td>${esc(r.to)}</td>
+      <td>${esc(r.relationship)}</td>
+    </tr>`).join('');
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>${esc(title)}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Georgia', 'Times New Roman', serif; color: #1a202c; background: white; padding: 0.75in; max-width: 8.5in; margin: 0 auto; font-size: 11pt; line-height: 1.6; }
+  h1 { font-size: 20pt; color: #0f172a; border-bottom: 3px solid #6366f1; padding-bottom: 8px; margin-bottom: 4px; }
+  .meta { font-size: 9pt; color: #64748b; margin-bottom: 24px; font-family: system-ui, sans-serif; }
+  h2 { font-size: 13pt; color: #1e293b; margin: 20px 0 6px; border-left: 3px solid #6366f1; padding-left: 10px; font-family: system-ui, sans-serif; }
+  h3 { font-size: 11pt; color: #334155; margin: 16px 0 6px; font-family: system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.04em; font-size: 9pt; }
+  h4 { font-size: 10.5pt; color: #1e293b; margin: 12px 0 4px; font-family: system-ui, sans-serif; }
+  p { margin-bottom: 6px; }
+  ul { margin: 6px 0 6px 20px; }
+  li { margin-bottom: 3px; }
+  .summary-box { background: #f0f4ff; border: 1px solid #c7d2fe; border-radius: 6px; padding: 14px 16px; margin-bottom: 24px; }
+  .summary-box p { margin: 0; }
+  .section { margin-bottom: 20px; }
+  .section-summary { color: #475569; font-style: italic; margin-bottom: 6px; }
+  .tags { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .tag { background: #e0e7ff; color: #3730a3; padding: 2px 8px; border-radius: 12px; font-size: 8.5pt; font-family: system-ui, sans-serif; }
+  .takeaways-list { list-style: none; padding: 0; }
+  .takeaways-list li { padding: 6px 0; border-bottom: 1px solid #e2e8f0; }
+  .takeaways-list li:last-child { border-bottom: none; }
+  .enrich-block { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; margin-bottom: 12px; }
+  .facts { margin: 6px 0 6px 16px; font-size: 10pt; }
+  .source { font-size: 9.5pt; margin: 4px 0; font-family: system-ui, sans-serif; }
+  .source-type { background: #dbeafe; color: #1d4ed8; padding: 1px 6px; border-radius: 4px; font-size: 8pt; margin-right: 4px; text-transform: uppercase; }
+  .source a { color: #4f46e5; }
+  .source-relevance { color: #64748b; }
+  .search-terms { font-size: 9pt; color: #64748b; margin-top: 6px; font-family: system-ui, sans-serif; }
+  .followup { border-left: 3px solid #f59e0b; padding-left: 12px; margin-bottom: 14px; }
+  .followup-q { font-weight: 600; margin-bottom: 3px; }
+  .followup-why { color: #64748b; font-size: 10pt; }
+  table { width: 100%; border-collapse: collapse; font-size: 10pt; }
+  td { padding: 5px 8px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  td:nth-child(2) { color: #6366f1; font-weight: bold; width: 24px; text-align: center; }
+  .page-break { page-break-before: always; }
+  @media print {
+    body { padding: 0.5in; }
+    a { text-decoration: none; color: inherit; }
+  }
+</style>
+</head>
+<body>
+
+<h1>${esc(title)}</h1>
+<div class="meta">Generated by NuroApp · ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+
+${analysis.summary ? `<div class="summary-box"><p>${esc(analysis.summary)}</p></div>` : ''}
+
+${takeawaysHtml ? `<h3>Key Takeaways</h3><ol class="takeaways-list">${takeawaysHtml}</ol>` : ''}
+
+${sectionsHtml ? `<h3 style="margin-top:24px">Content Sections</h3>${sectionsHtml}` : ''}
+
+${crossRefHtml ? `<h3 style="margin-top:24px">Concept Cross-References</h3><table>${crossRefHtml}</table>` : ''}
+
+${enrichmentHtml ? `<div class="page-break"></div><h3>Background Context &amp; Sources</h3><p style="color:#64748b;font-size:9.5pt;margin-bottom:12px;font-family:system-ui,sans-serif">AI-suggested sources — verify before citing.</p>${enrichmentHtml}` : ''}
+
+${followUpHtml ? `<h3 style="margin-top:24px">Follow-Up Questions for Deeper Learning</h3>${followUpHtml}` : ''}
+
+</body>
+</html>`;
+
+  const win = window.open('', '_blank');
+  if (!win) throw new Error('Pop-up blocked. Please allow pop-ups to use Print.');
+  win.document.write(html);
+  win.document.close();
+  win.onload = () => win.print();
+}
+
 export function exportToMarkdown(cards) {
   try {
     return cards.map(card => `

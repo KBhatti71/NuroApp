@@ -5,6 +5,7 @@ import { useToast } from '../components/ui/useToast';
 import { ACTIONS } from '../context/actions';
 import { SESSION_TYPE, SESSION_TYPE_META, APP_MODE, getImportanceTier } from '../constants/modes';
 import { analyzeLecture } from '../services/ai/lectureAnalyzer';
+import { triggerSessionPrint } from '../services/exportService';
 import ImportanceBadge from '../components/intelligence/ImportanceBadge';
 import MomentCard from '../components/intelligence/MomentCard';
 import Spinner from '../components/ui/Spinner';
@@ -121,6 +122,107 @@ function NewSessionForm({ onCreate, collapsed, onToggle }) {
   );
 }
 
+// ─── Shared sub-components ────────────────────────────────────────────────────
+
+/** Renders a list of enrichment blocks (background + sources + search terms). */
+function EnrichmentList({ enrichment }) {
+  if (!(enrichment ?? []).length) return null;
+  return (
+    <div className="space-y-3">
+      {enrichment.map((e, i) => (
+        <div key={i} className="surface-card p-4 space-y-2">
+          <h4 className="text-sm font-semibold text-ink-900">{e.concept}</h4>
+          <p className="text-sm text-ink-700 leading-relaxed">{e.background}</p>
+
+          {(e.keyFacts ?? []).length > 0 && (
+            <ul className="space-y-1 mt-1">
+              {e.keyFacts.map((f, j) => (
+                <li key={j} className="text-xs text-ink-600 flex gap-2">
+                  <span className="text-primary-500 shrink-0">·</span> {f}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {(e.suggestedSources ?? []).length > 0 && (
+            <div className="space-y-1 pt-1">
+              <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Sources</p>
+              {e.suggestedSources.map((s, j) => (
+                <div key={j} className="flex items-start gap-2 text-xs">
+                  <span className="bg-primary-50 text-primary-700 border border-primary-200/60 px-1.5 py-0.5 rounded text-[10px] font-medium uppercase shrink-0">
+                    {s.type}
+                  </span>
+                  <span className="flex-1 min-w-0">
+                    {s.url
+                      ? <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline font-medium">{s.title}</a>
+                      : <span className="font-medium text-ink-800">{s.title}</span>
+                    }
+                    {s.relevance && <span className="text-ink-500"> — {s.relevance}</span>}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {(e.searchTerms ?? []).length > 0 && (
+            <p className="text-xs text-ink-400 pt-1">
+              <span className="font-medium text-ink-500">Search: </span>
+              {e.searchTerms.map((t, j) => (
+                <span key={j}>"{t}"{j < e.searchTerms.length - 1 ? ', ' : ''}</span>
+              ))}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Renders follow-up research questions with rationale and search terms. */
+function FollowUpQuestionsList({ questions }) {
+  if (!(questions ?? []).length) return (
+    <p className="text-sm text-ink-400 text-center py-6">No follow-up questions generated.</p>
+  );
+  return (
+    <div className="space-y-3">
+      {questions.map((q, i) => (
+        <div key={i} className="border-l-2 border-primary-400 pl-4 py-1 space-y-1">
+          <p className="text-sm font-semibold text-ink-900">{i + 1}. {q.question}</p>
+          {q.why && <p className="text-xs text-ink-500 leading-relaxed">{q.why}</p>}
+          {(q.searchTerms ?? []).length > 0 && (
+            <p className="text-xs text-ink-400">
+              <span className="font-medium text-ink-500">Search: </span>
+              {q.searchTerms.map((t, j) => (
+                <span key={j}>"{t}"{j < q.searchTerms.length - 1 ? ', ' : ''}</span>
+              ))}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Renders cross-references between concepts. */
+function CrossRefList({ crossReferences }) {
+  if (!(crossReferences ?? []).length) return null;
+  return (
+    <div className="surface-card p-4">
+      <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-3">Concept Cross-References</h4>
+      <div className="space-y-2">
+        {crossReferences.map((r, i) => (
+          <div key={i} className="flex items-start gap-2 text-xs">
+            <span className="font-semibold text-primary-700 shrink-0">{r.from}</span>
+            <span className="text-ink-400 shrink-0">↔</span>
+            <span className="font-semibold text-primary-700 shrink-0">{r.to}</span>
+            <span className="text-ink-500 leading-relaxed">— {r.relationship}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Session Analysis Panel ───────────────────────────────────────────────────
 
 function SessionPanel({ session, dispatch, toast }) {
@@ -134,6 +236,11 @@ function SessionPanel({ session, dispatch, toast }) {
     dispatch({ type: ACTIONS.ADD_CARDS, payload: cards });
     setSaved(true);
     toast(`${cards.length} card${cards.length !== 1 ? 's' : ''} saved to your deck`, 'success');
+  };
+
+  const handlePrint = () => {
+    try { triggerSessionPrint(session); }
+    catch (err) { toast(err.message, 'error'); }
   };
 
   if (analysisError) {
@@ -153,30 +260,42 @@ function SessionPanel({ session, dispatch, toast }) {
   }
 
   const cardCount = (analysis.flashcards ?? []).length;
+  const hasResearch = (analysis.enrichment ?? []).length > 0
+    || (analysis.followUpQuestions ?? []).length > 0
+    || (analysis.crossReferences ?? []).length > 0;
 
   const tabs = [
-    { id: 'overview',    label: '\u{1f4cb} Overview' },
-    { id: 'flashcards',  label: `\u{1f0cf} Flashcards${cardCount ? ` (${cardCount})` : ''}` },
-    { id: 'questions',   label: '\u2753 Questions' },
-    { id: 'moments',     label: '\u26a1 Key Moments' },
-    { id: 'suggestions', label: '\u{1f4a1} Study Tips' },
-    { id: 'notes',       label: '\u{1f4dd} Notes' },
-  ];
+    { id: 'overview',   label: '\u{1f4cb} Overview' },
+    { id: 'flashcards', label: `\u{1f0cf} Flashcards${cardCount ? ` (${cardCount})` : ''}` },
+    { id: 'questions',  label: '\u2753 Questions' },
+    { id: 'moments',    label: '\u26a1 Moments' },
+    { id: 'suggestions',label: '\u{1f4a1} Study Tips' },
+    hasResearch && { id: 'research', label: '\u{1f310} Research' },
+    { id: 'notes',      label: '\u{1f4dd} Notes' },
+  ].filter(Boolean);
 
   return (
     <div className="space-y-0">
-      {/* Header row: title + save button */}
-      <div className="flex items-center justify-between mb-3">
+      {/* Header row: title + action buttons */}
+      <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
         <h3 className="text-sm font-semibold text-ink-800 truncate">{session.title}</h3>
-        {cardCount > 0 && (
+        <div className="flex items-center gap-2 shrink-0">
           <button
-            onClick={handleSaveToDeck}
-            disabled={saved}
-            className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-semibold hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0 ml-3"
+            onClick={handlePrint}
+            className="px-3 py-1.5 bg-surface-100 text-ink-600 border border-surface-200/70 rounded-lg text-xs font-semibold hover:bg-surface-200 transition-colors"
           >
-            {saved ? '✓ Saved' : `\u{1f0cf} Save ${cardCount} card${cardCount !== 1 ? 's' : ''}`}
+            {'\u{1f5a8}'} Export
           </button>
-        )}
+          {cardCount > 0 && (
+            <button
+              onClick={handleSaveToDeck}
+              disabled={saved}
+              className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-semibold hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {saved ? '✓ Saved' : `\u{1f0cf} Save ${cardCount} card${cardCount !== 1 ? 's' : ''}`}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tab bar */}
@@ -196,7 +315,7 @@ function SessionPanel({ session, dispatch, toast }) {
         ))}
       </div>
 
-      {/* Overview: summary + takeaways + confusion moments */}
+      {/* Overview: summary + sections + takeaways + confusion */}
       {tab === 'overview' && (
         <div className="space-y-4">
           <div className="bg-primary-50/80 border border-primary-200/70 rounded-xl p-4">
@@ -219,20 +338,55 @@ function SessionPanel({ session, dispatch, toast }) {
             </div>
           )}
 
+          {/* Logical sections extracted from notes */}
+          {(analysis.sections ?? []).length > 0 && (
+            <div className="space-y-3">
+              <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Content Sections</h4>
+              {analysis.sections.map((sec, i) => (
+                <div key={i} className="surface-card p-4 space-y-2">
+                  <h5 className="text-sm font-semibold text-ink-900">{sec.title}</h5>
+                  {sec.summary && <p className="text-xs text-ink-500 italic leading-relaxed">{sec.summary}</p>}
+                  {(sec.keyPoints ?? []).length > 0 && (
+                    <ul className="space-y-1 mt-1">
+                      {sec.keyPoints.map((p, j) => (
+                        <li key={j} className="text-sm text-ink-700 flex gap-2">
+                          <span className="text-primary-500 shrink-0">·</span> {p}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {(sec.relatedConcepts ?? []).length > 0 && (
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      {sec.relatedConcepts.map((c, j) => (
+                        <span key={j} className="text-[10px] px-2 py-0.5 bg-primary-50 text-primary-700 border border-primary-200/60 rounded-full font-medium">
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
           {(analysis.confusionMoments ?? []).length > 0 && (
             <div className="surface-card p-4">
               <h4 className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-3">
-                ⚠ Confusion Points
+                {'\u26a0'} Confusion Points
               </h4>
               <ul className="space-y-1.5">
                 {analysis.confusionMoments.map((c, i) => (
                   <li key={i} className="text-sm text-ink-700 flex gap-2">
-                    <span className="text-amber-500 shrink-0">·</span> {c}
+                    <span className="text-amber-500 shrink-0">·</span>
+                    {typeof c === 'string' ? c : c.text}
+                    {c.context && <span className="text-ink-400 text-xs ml-1">— {c.context}</span>}
                   </li>
                 ))}
               </ul>
             </div>
           )}
+
+          <CrossRefList crossReferences={analysis.crossReferences} />
         </div>
       )}
 
@@ -296,6 +450,37 @@ function SessionPanel({ session, dispatch, toast }) {
               ))
           }
         </ul>
+      )}
+
+      {tab === 'research' && (
+        <div className="space-y-5">
+          {(analysis.enrichment ?? []).length > 0 && (
+            <div>
+              <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-3">
+                {'\u{1f4da}'} Background Context &amp; Sources
+              </h4>
+              <p className="text-xs text-ink-400 mb-3">
+                AI-suggested sources from training knowledge — verify before citing in assignments.
+              </p>
+              <EnrichmentList enrichment={analysis.enrichment} />
+            </div>
+          )}
+
+          {(analysis.followUpQuestions ?? []).length > 0 && (
+            <div>
+              <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-3">
+                {'\u{1f50d}'} Follow-Up Questions for Deeper Learning
+              </h4>
+              <FollowUpQuestionsList questions={analysis.followUpQuestions} />
+            </div>
+          )}
+
+          {(analysis.enrichment ?? []).length === 0 && (analysis.followUpQuestions ?? []).length === 0 && (
+            <p className="text-sm text-ink-400 text-center py-6">
+              Research context not available — enable real AI mode to generate source suggestions.
+            </p>
+          )}
+        </div>
       )}
 
       {tab === 'notes' && (

@@ -5,6 +5,7 @@ import { useToast } from '../components/ui/useToast';
 import { ACTIONS } from '../context/actions';
 import { SESSION_TYPE, SESSION_TYPE_META, APP_MODE, getImportanceTier } from '../constants/modes';
 import { analyzeMeeting } from '../services/ai/meetingAnalyzer';
+import { triggerSessionPrint } from '../services/exportService';
 import ImportanceBadge from '../components/intelligence/ImportanceBadge';
 import MomentCard from '../components/intelligence/MomentCard';
 import Spinner from '../components/ui/Spinner';
@@ -170,6 +171,101 @@ function NewSessionForm({ onCreate, collapsed, onToggle }) {
   );
 }
 
+// ─── Shared sub-components ────────────────────────────────────────────────────
+
+function EnrichmentList({ enrichment }) {
+  if (!(enrichment ?? []).length) return null;
+  return (
+    <div className="space-y-3">
+      {enrichment.map((e, i) => (
+        <div key={i} className="surface-card p-4 space-y-2">
+          <h4 className="text-sm font-semibold text-ink-900">{e.concept}</h4>
+          <p className="text-sm text-ink-700 leading-relaxed">{e.background}</p>
+          {(e.keyFacts ?? []).length > 0 && (
+            <ul className="space-y-1 mt-1">
+              {e.keyFacts.map((f, j) => (
+                <li key={j} className="text-xs text-ink-600 flex gap-2">
+                  <span className="text-primary-500 shrink-0">·</span> {f}
+                </li>
+              ))}
+            </ul>
+          )}
+          {(e.suggestedSources ?? []).length > 0 && (
+            <div className="space-y-1 pt-1">
+              <p className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Sources</p>
+              {e.suggestedSources.map((s, j) => (
+                <div key={j} className="flex items-start gap-2 text-xs">
+                  <span className="bg-primary-50 text-primary-700 border border-primary-200/60 px-1.5 py-0.5 rounded text-[10px] font-medium uppercase shrink-0">
+                    {s.type}
+                  </span>
+                  <span className="flex-1 min-w-0">
+                    {s.url
+                      ? <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline font-medium">{s.title}</a>
+                      : <span className="font-medium text-ink-800">{s.title}</span>
+                    }
+                    {s.relevance && <span className="text-ink-500"> — {s.relevance}</span>}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+          {(e.searchTerms ?? []).length > 0 && (
+            <p className="text-xs text-ink-400 pt-1">
+              <span className="font-medium text-ink-500">Search: </span>
+              {e.searchTerms.map((t, j) => (
+                <span key={j}>"{t}"{j < e.searchTerms.length - 1 ? ', ' : ''}</span>
+              ))}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FollowUpQuestionsList({ questions }) {
+  if (!(questions ?? []).length) return (
+    <p className="text-sm text-ink-400 text-center py-6">No follow-up questions generated.</p>
+  );
+  return (
+    <div className="space-y-3">
+      {questions.map((q, i) => (
+        <div key={i} className="border-l-2 border-primary-400 pl-4 py-1 space-y-1">
+          <p className="text-sm font-semibold text-ink-900">{i + 1}. {q.question}</p>
+          {q.why && <p className="text-xs text-ink-500 leading-relaxed">{q.why}</p>}
+          {(q.searchTerms ?? []).length > 0 && (
+            <p className="text-xs text-ink-400">
+              <span className="font-medium text-ink-500">Search: </span>
+              {q.searchTerms.map((t, j) => (
+                <span key={j}>"{t}"{j < q.searchTerms.length - 1 ? ', ' : ''}</span>
+              ))}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CrossRefList({ crossReferences }) {
+  if (!(crossReferences ?? []).length) return null;
+  return (
+    <div className="surface-card p-4">
+      <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-3">Topic Cross-References</h4>
+      <div className="space-y-2">
+        {crossReferences.map((r, i) => (
+          <div key={i} className="flex items-start gap-2 text-xs">
+            <span className="font-semibold text-primary-700 shrink-0">{r.from}</span>
+            <span className="text-ink-400 shrink-0">↔</span>
+            <span className="font-semibold text-primary-700 shrink-0">{r.to}</span>
+            <span className="text-ink-500 leading-relaxed">— {r.relationship}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Session Analysis Panel ───────────────────────────────────────────────────
 
 function SessionPanel({ session, dispatch, toast }) {
@@ -202,6 +298,14 @@ function SessionPanel({ session, dispatch, toast }) {
   }
 
   const itemCount = (analysis.actionItems ?? []).length + (analysis.decisions ?? []).length;
+  const hasResearch = (analysis.enrichment ?? []).length > 0
+    || (analysis.followUpQuestions ?? []).length > 0
+    || (analysis.crossReferences ?? []).length > 0;
+
+  const handlePrint = () => {
+    try { triggerSessionPrint(session); }
+    catch (err) { toast(err.message, 'error'); }
+  };
 
   const tabs = [
     { id: 'overview',      label: '\u{1f4cb} Overview' },
@@ -210,23 +314,32 @@ function SessionPanel({ session, dispatch, toast }) {
     { id: 'stakeholders',  label: '\u{1f465} People' },
     { id: 'moments',       label: '\u26a1 Moments' },
     { id: 'followups',     label: '\u{1f4cc} Follow-ups' },
+    hasResearch && { id: 'research', label: '\u{1f310} Research' },
     { id: 'notes',         label: '\u{1f4dd} Notes' },
-  ];
+  ].filter(Boolean);
 
   return (
     <div className="space-y-0">
-      {/* Header row: title + save button */}
-      <div className="flex items-center justify-between mb-3">
+      {/* Header row: title + action buttons */}
+      <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
         <h3 className="text-sm font-semibold text-ink-800 truncate">{session.title}</h3>
-        {itemCount > 0 && (
+        <div className="flex items-center gap-2 shrink-0">
           <button
-            onClick={handleSaveToDeck}
-            disabled={saved}
-            className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-semibold hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0 ml-3"
+            onClick={handlePrint}
+            className="px-3 py-1.5 bg-surface-100 text-ink-600 border border-surface-200/70 rounded-lg text-xs font-semibold hover:bg-surface-200 transition-colors"
           >
-            {saved ? '✓ Saved' : `\u{1f4bc} Save ${itemCount} item${itemCount !== 1 ? 's' : ''}`}
+            {'\u{1f5a8}'} Export
           </button>
-        )}
+          {itemCount > 0 && (
+            <button
+              onClick={handleSaveToDeck}
+              disabled={saved}
+              className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-semibold hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {saved ? '✓ Saved' : `\u{1f4bc} Save ${itemCount} item${itemCount !== 1 ? 's' : ''}`}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tab bar */}
@@ -281,7 +394,7 @@ function SessionPanel({ session, dispatch, toast }) {
           {(analysis.actionItems ?? []).filter(a => a.urgency === 'urgent').length > 0 && (
             <div className="surface-card p-4">
               <h4 className="text-xs font-semibold text-danger-400 uppercase tracking-wider mb-3">
-                🚨 Urgent Actions
+                {'\u{1f6a8}'} Urgent Actions
               </h4>
               <ul className="space-y-1.5">
                 {(analysis.actionItems ?? [])
@@ -299,6 +412,39 @@ function SessionPanel({ session, dispatch, toast }) {
               </ul>
             </div>
           )}
+
+          {/* Logical sections from meeting notes */}
+          {(analysis.sections ?? []).length > 0 && (
+            <div className="space-y-3">
+              <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider">Meeting Topics</h4>
+              {analysis.sections.map((sec, i) => (
+                <div key={i} className="surface-card p-4 space-y-2">
+                  <h5 className="text-sm font-semibold text-ink-900">{sec.title}</h5>
+                  {sec.summary && <p className="text-xs text-ink-500 italic leading-relaxed">{sec.summary}</p>}
+                  {(sec.keyPoints ?? []).length > 0 && (
+                    <ul className="space-y-1 mt-1">
+                      {sec.keyPoints.map((p, j) => (
+                        <li key={j} className="text-sm text-ink-700 flex gap-2">
+                          <span className="text-primary-500 shrink-0">·</span> {p}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {(sec.relatedConcepts ?? []).length > 0 && (
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      {sec.relatedConcepts.map((c, j) => (
+                        <span key={j} className="text-[10px] px-2 py-0.5 bg-primary-50 text-primary-700 border border-primary-200/60 rounded-full font-medium">
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <CrossRefList crossReferences={analysis.crossReferences} />
         </div>
       )}
 
@@ -428,6 +574,37 @@ function SessionPanel({ session, dispatch, toast }) {
                 </div>
               ))
           }
+        </div>
+      )}
+
+      {tab === 'research' && (
+        <div className="space-y-5">
+          {(analysis.enrichment ?? []).length > 0 && (
+            <div>
+              <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-3">
+                {'\u{1f4da}'} Background Context &amp; Sources
+              </h4>
+              <p className="text-xs text-ink-400 mb-3">
+                AI-suggested sources from training knowledge — verify before sharing externally.
+              </p>
+              <EnrichmentList enrichment={analysis.enrichment} />
+            </div>
+          )}
+
+          {(analysis.followUpQuestions ?? []).length > 0 && (
+            <div>
+              <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-3">
+                {'\u{1f50d}'} Open Questions to Investigate
+              </h4>
+              <FollowUpQuestionsList questions={analysis.followUpQuestions} />
+            </div>
+          )}
+
+          {(analysis.enrichment ?? []).length === 0 && (analysis.followUpQuestions ?? []).length === 0 && (
+            <p className="text-sm text-ink-400 text-center py-6">
+              Research context not available — enable real AI mode to generate source suggestions.
+            </p>
+          )}
         </div>
       )}
 

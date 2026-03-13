@@ -73,6 +73,30 @@ export async function generateJSON(systemPrompt, userPrompt, maxTokens = MAX_TOK
 }
 
 /**
+ * enrichConcepts — second-pass AI call that adds background context,
+ * authoritative source suggestions, and search terms for a list of
+ * concept names extracted from the main analysis.
+ *
+ * Returns an empty array gracefully if AI is disabled or the call fails.
+ *
+ * @param {string[]} conceptNames - Up to 5 concept names
+ * @returns {Promise<Array>} Array of enrichment objects per concept
+ */
+export async function enrichConcepts(conceptNames) {
+  if (!conceptNames?.length || !isAIEnabled()) return [];
+  try {
+    const { buildEnrichmentSystemPrompt, buildEnrichmentUserPrompt } = await import('./prompts');
+    const system = buildEnrichmentSystemPrompt();
+    const user   = buildEnrichmentUserPrompt(conceptNames.slice(0, 5));
+    const result = await generateJSON(system, user, 2048);
+    return Array.isArray(result) ? result : [];
+  } catch (err) {
+    console.warn('[claudeClient] enrichConcepts failed, skipping:', err.message);
+    return [];
+  }
+}
+
+/**
  * streamText — streaming text generation via an async generator.
  *
  * Usage:

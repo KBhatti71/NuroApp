@@ -2,17 +2,23 @@
  * lectureAnalyzer — School Mode AI service.
  *
  * Analyses a lecture/study-group/office-hours transcript and extracts:
+ *  - Logical sections with key points
  *  - Key concepts with importance scores
+ *  - Cross-references between concepts
  *  - Auto-generated flashcards
  *  - Practice questions
+ *  - Follow-up research questions
  *  - Confusion moments (needs clarification)
  *  - Study suggestions
  *  - Important moments with 0-100 scores
  *
+ * After the primary analysis a second enrichment call adds background
+ * context and authoritative source suggestions for the top concepts.
+ *
  * Falls back to text-based heuristic analysis when AI is disabled.
  */
 
-import { isAIEnabled, generateJSON } from './claudeClient';
+import { isAIEnabled, generateJSON, enrichConcepts } from './claudeClient';
 import { buildLectureSystemPrompt, buildLectureUserPrompt } from './prompts';
 import { SCHOOL_KEYWORDS, getImportanceTier } from '../../constants/modes';
 
@@ -38,6 +44,7 @@ function buildMockAnalysis(rawText, title) {
 
   return {
     summary: `Analysis of "${title || 'lecture'}". ${lines.length} content lines processed. Enable real AI (VITE_USE_REAL_AI=true) for full intelligence extraction.`,
+    sections: [],
     keyTakeaways: importantMoments.slice(0, 3).map(m => m.text),
     concepts: importantMoments.slice(0, 5).map((m, i) => ({
       name: `Concept ${i + 1}`,
@@ -45,6 +52,7 @@ function buildMockAnalysis(rawText, title) {
       importance: m.score,
       importanceReason: 'keyword match',
     })),
+    crossReferences: [],
     importantMoments,
     flashcards: importantMoments.slice(0, 4).map((m, i) => ({
       front: `What is key point ${i + 1} from this lecture?`,
@@ -56,12 +64,14 @@ function buildMockAnalysis(rawText, title) {
       answer: 'Review the lecture notes for a complete answer.',
       importance: m.score,
     })),
+    followUpQuestions: [],
     confusionMoments: [],
     studySuggestions: [
       'Review the high-importance segments flagged above.',
       'Generate flashcards from the identified key concepts.',
       'Enable real AI mode for richer flashcards and practice questions.',
     ],
+    enrichment: [],
   };
 }
 
@@ -82,9 +92,19 @@ export async function analyzeLecture(rawText, title, sessionType = 'lecture') {
     try {
       const system = buildLectureSystemPrompt(sessionType);
       const user   = buildLectureUserPrompt(rawText, title);
-      // Use 4096 tokens — the lecture schema (concepts, flashcards, questions, etc.)
-      // exceeds the 1024-token default and causes truncated/invalid JSON responses.
-      return await generateJSON(system, user, 4096);
+      // Increased to 8192 — the enriched schema (sections, crossReferences,
+      // followUpQuestions) requires more tokens than the base schema.
+      const analysis = await generateJSON(system, user, 8192);
+
+      // Second pass: enrich top concepts with background context + sources.
+      // Runs in parallel-ish — we don't block the primary analysis result.
+      const topConceptNames = (analysis.concepts ?? [])
+        .slice(0, 5)
+        .map(c => c.name)
+        .filter(Boolean);
+      analysis.enrichment = await enrichConcepts(topConceptNames);
+
+      return analysis;
     } catch (err) {
       console.warn('[lectureAnalyzer] LLM failed, using heuristic fallback:', err.message);
     }
