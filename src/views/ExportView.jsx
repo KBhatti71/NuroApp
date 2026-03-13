@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useExport } from '../hooks/useExport';
 import { useStudyMode } from '../hooks/useStudyMode';
 import Button from '../components/ui/Button';
@@ -29,11 +29,11 @@ function ExportOption({ icon, title, desc, action, color }) {
       <button
         onClick={handleClick}
         disabled={loading}
-        className="text-left w-full p-5 bg-surface-0 border border-surface-200 rounded-xl hover:border-primary-300 hover:shadow-card-hover transition-all group disabled:opacity-60 disabled:cursor-not-allowed"
+        className="text-left w-full p-5 surface-card hover:border-primary-300 hover:shadow-card-hover transition-all group disabled:opacity-60 disabled:cursor-not-allowed"
       >
         <div className="flex items-start gap-4">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0 ${color}`}>
-            {loading ? <Spinner size="sm" /> : done ? '✓' : icon}
+            {loading ? <Spinner size="sm" /> : done ? '\u2713' : icon}
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold text-ink-900 group-hover:text-primary-600 transition-colors">
@@ -41,7 +41,7 @@ function ExportOption({ icon, title, desc, action, color }) {
             </div>
             <div className="text-xs text-ink-500 mt-0.5">{desc}</div>
           </div>
-          <span className="text-ink-300 group-hover:text-primary-400 transition-colors text-sm">→</span>
+          <span className="text-ink-300 group-hover:text-primary-400 transition-colors text-sm">\u2192</span>
         </div>
       </button>
       {error && (
@@ -60,30 +60,30 @@ export default function ExportView() {
 
   const exportOptions = [
     {
-      icon: '⎙',
+      icon: '\u{1f4c4}',
       title: 'Export as PDF',
-      desc: `${targetCards.length} cards · 5×3 inch landscape, one card per page — ready to print`,
+      desc: `${targetCards.length} cards - 5x3 inch landscape, one card per page - ready to print`,
       action: () => exportPDF(targetCards),
       color: 'bg-red-50 text-red-500',
     },
     {
-      icon: '⎗',
+      icon: '\u{1f5a8}',
       title: 'Print Cards',
-      desc: `${targetCards.length} cards · Opens print dialog with formatted card layout`,
+      desc: `${targetCards.length} cards - Opens print dialog with formatted card layout`,
       action: () => print(targetCards),
       color: 'bg-blue-50 text-blue-500',
     },
     {
-      icon: '⎘',
+      icon: '\u{1f4cb}',
       title: 'Copy as Markdown',
-      desc: `${targetCards.length} cards · Copy all card content as structured Markdown to clipboard`,
+      desc: `${targetCards.length} cards - Copy all card content as structured Markdown to clipboard`,
       action: () => copyMarkdown(targetCards),
       color: 'bg-emerald-50 text-emerald-600',
     },
     {
-      icon: '⎙',
+      icon: '\u{1f4e6}',
       title: 'Download JSON',
-      desc: `${targetCards.length} cards · Full card data for import into Anki or other tools`,
+      desc: `${targetCards.length} cards - Full card data for import into Anki or other tools`,
       action: () => downloadJSON(targetCards),
       color: 'bg-amber-50 text-amber-600',
     },
@@ -91,7 +91,6 @@ export default function ExportView() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      {/* Card selection */}
       <Card className="p-5">
         <h3 className="text-sm font-semibold text-ink-900 mb-3">Which cards to export?</h3>
         <div className="flex gap-3">
@@ -124,7 +123,6 @@ export default function ExportView() {
         )}
       </Card>
 
-      {/* Export options */}
       <div>
         <h3 className="text-sm font-semibold text-ink-700 mb-3 uppercase tracking-wider">Export Formats</h3>
         <div className="space-y-3">
@@ -134,13 +132,12 @@ export default function ExportView() {
         </div>
       </div>
 
-      {/* Preview */}
       <Card className="p-5">
         <h3 className="text-sm font-semibold text-ink-900 mb-4">Card Preview (first {Math.min(3, targetCards.length)})</h3>
         <div className="space-y-4">
           {targetCards.slice(0, 3).map(card => (
-            <div key={card.id} className="border border-surface-200 rounded-xl p-4 font-mono text-xs space-y-1">
-              <div className="text-ink-400">[{card.unit}] · ★ {card.quizLikelihood}%</div>
+            <div key={card.id} className="border border-surface-200/70 rounded-xl p-4 font-mono text-xs space-y-1">
+              <div className="text-ink-400">[{card.unit}] \u00b7 \u2605 {card.quizLikelihood}%</div>
               <div className="text-ink-900 font-bold text-sm font-sans">{card.topic}</div>
               <div className="text-ink-600 font-sans leading-relaxed">
                 {(card.coreIdea ?? '').slice(0, 120)}{(card.coreIdea?.length ?? 0) > 120 ? '...' : ''}

@@ -1,4 +1,4 @@
-import { useStudyMode } from '../hooks/useStudyMode';
+﻿import { useStudyMode } from '../hooks/useStudyMode';
 import { useNav } from '../hooks/useAppContext';
 import { usePipeline } from '../hooks/usePipeline';
 import CardFilters from '../components/cards/CardFilters';
@@ -13,11 +13,11 @@ export default function CardGenerationView() {
   if (allCards.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center max-w-md mx-auto">
-        <div className="w-16 h-16 rounded-2xl bg-surface-100 flex items-center justify-center text-2xl mb-5" aria-hidden="true">▣</div>
+        <div className="w-16 h-16 rounded-2xl bg-surface-100 flex items-center justify-center text-2xl mb-5" aria-hidden="true">\u25a6</div>
         <h2 className="text-xl font-bold text-ink-900 mb-2">No Cards Generated Yet</h2>
         <p className="text-ink-500 text-sm mb-6 leading-relaxed">
-          Import your course materials — syllabus, transcripts, quizzes, and slides — then run the analysis to generate
-          professor-aligned 3×5 study cards.
+          Import your course materials - syllabus, transcripts, quizzes, and slides - then run the analysis to generate
+          professor-aligned 3x5 study cards.
         </p>
         <div className="flex gap-3 flex-wrap justify-center">
           <Button onClick={() => navigate('import')}>Import Materials</Button>
@@ -31,7 +31,6 @@ export default function CardGenerationView() {
 
   return (
     <div className="space-y-5 max-w-7xl mx-auto">
-      {/* Header stats */}
       <div className="flex flex-wrap items-center gap-4">
         <dl className="flex gap-4">
           <div className="text-center">
@@ -45,10 +44,10 @@ export default function CardGenerationView() {
             <dt className="text-xs text-ink-500">Pinned</dt>
           </div>
           <div className="text-center">
-            <dd className="text-xl font-bold text-primary-500">
+            <dd className="text-xl font-bold text-primary-600">
               {allCards.filter(c => c.quizLikelihood >= 85).length}
             </dd>
-            <dt className="text-xs text-ink-500"><span aria-hidden="true">Very High ★</span><span className="sr-only">Very High Quiz Likelihood</span></dt>
+            <dt className="text-xs text-ink-500"><span aria-hidden="true">Very High \u2605</span><span className="sr-only">Very High Quiz Likelihood</span></dt>
           </div>
           <div className="text-center">
             <dd className="text-xl font-bold text-ink-700">
@@ -63,22 +62,19 @@ export default function CardGenerationView() {
             View Analysis
           </Button>
           <Button onClick={() => navigate('study_modes')} size="sm" aria-label="Study now">
-            Study Now <span aria-hidden="true">→</span>
+            Study Now <span aria-hidden="true">\u2192</span>
           </Button>
         </div>
       </div>
 
-      {/* Filters */}
       <CardFilters />
 
-      {/* Results count when filtered */}
       {filteredCards.length !== allCards.length && (
         <p className="text-sm text-ink-500">
           Showing {filteredCards.length} of {allCards.length} cards
         </p>
       )}
 
-      {/* Card grid */}
       <CardGrid cards={filteredCards} />
     </div>
   );

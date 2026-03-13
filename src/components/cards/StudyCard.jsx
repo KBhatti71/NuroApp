@@ -1,16 +1,16 @@
-import { useAppContext } from '../../hooks/useAppContext';
+﻿import { useAppContext } from '../../hooks/useAppContext';
 import { ACTIONS } from '../../context/actions';
 
 function LikelihoodBar({ score }) {
-  let color = '#f87171';
-  if (score >= 85) color = '#34d399';
-  else if (score >= 70) color = '#fbbf24';
-  else if (score >= 55) color = '#f59e0b';
+  let color = '#e76666';
+  if (score >= 85) color = '#3cbf8f';
+  else if (score >= 70) color = '#f2b84b';
+  else if (score >= 55) color = '#b6782e';
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 h-1 bg-surface-200 rounded-b-xl overflow-hidden">
+    <div className="absolute bottom-0 left-0 right-0 h-1 bg-surface-200 rounded-b-2xl overflow-hidden">
       <div
-        className="h-full rounded-b-xl transition-all"
+        className="h-full rounded-b-2xl transition-all"
         style={{ width: `${score}%`, backgroundColor: color }}
       />
     </div>
@@ -18,11 +18,11 @@ function LikelihoodBar({ score }) {
 }
 
 const UNIT_COLORS = {
-  unit_01: '#6366f1',
-  unit_02: '#0ea5e9',
-  unit_03: '#10b981',
-  unit_04: '#f59e0b',
-  unit_05: '#8b5cf6',
+  unit_01: '#1e9d91',
+  unit_02: '#2e6f9b',
+  unit_03: '#3a8f7a',
+  unit_04: '#b6782e',
+  unit_05: '#2f7f68',
 };
 
 export default function StudyCard({ card, onClick, compact = false }) {
@@ -33,7 +33,7 @@ export default function StudyCard({ card, onClick, compact = false }) {
     dispatch({ type: ACTIONS.TOGGLE_PIN, payload: card.id });
   };
 
-  const unitColor = UNIT_COLORS[card.unitId] || '#14b8a6';
+  const unitColor = UNIT_COLORS[card.unitId] || '#1e9d91';
 
   return (
     <div
@@ -42,13 +42,11 @@ export default function StudyCard({ card, onClick, compact = false }) {
       role="article"
       tabIndex={0}
       aria-label={`Study card: ${card.topic}`}
-      className="relative bg-surface-0 rounded-xl border border-surface-200 shadow-card hover:shadow-card-hover transition-all cursor-pointer group overflow-hidden pb-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
+      className="relative bg-surface-0/85 rounded-2xl border border-surface-200/70 shadow-card hover:shadow-card-hover transition-all cursor-pointer group overflow-hidden pb-1 focus:outline-none focus:ring-2 focus:ring-primary-500"
     >
-      {/* Top accent bar with unit color */}
-      <div className="h-1 rounded-t-xl" style={{ backgroundColor: unitColor }} />
+      <div className="h-1 rounded-t-2xl" style={{ backgroundColor: unitColor }} />
 
       <div className="p-4">
-        {/* Header row */}
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -62,11 +60,11 @@ export default function StudyCard({ card, onClick, compact = false }) {
                 className="px-2 py-0.5 rounded text-xs font-bold"
                 aria-label={`Quiz likelihood: ${card.quizLikelihood}%`}
                 style={{
-                  backgroundColor: card.quizLikelihood >= 85 ? '#dcfce7' : card.quizLikelihood >= 70 ? '#fef3c7' : '#fee2e2',
-                  color: card.quizLikelihood >= 85 ? '#15803d' : card.quizLikelihood >= 70 ? '#92400e' : '#dc2626',
+                  backgroundColor: card.quizLikelihood >= 85 ? '#e9fbf4' : card.quizLikelihood >= 70 ? '#fff7e6' : '#fff1f1',
+                  color: card.quizLikelihood >= 85 ? '#1f7a64' : card.quizLikelihood >= 70 ? '#9a5e14' : '#c84646',
                 }}
               >
-                <span aria-hidden="true">★</span> {card.quizLikelihood}%
+                <span aria-hidden="true">\u2605</span> {card.quizLikelihood}%
               </span>
             </div>
             <h3 className="text-sm font-bold text-ink-900 leading-tight">{card.topic}</h3>
@@ -81,16 +79,14 @@ export default function StudyCard({ card, onClick, compact = false }) {
                 : 'text-ink-300 opacity-0 group-hover:opacity-100 hover:text-warn-400 hover:bg-warn-50'
             }`}
           >
-            <span aria-hidden="true">★</span>
+            <span aria-hidden="true">\u2605</span>
           </button>
         </div>
 
-        {/* Core idea */}
         <p className="text-xs text-ink-600 leading-relaxed mb-3 line-clamp-2">
           {card.coreIdea}
         </p>
 
-        {/* Key terms preview */}
         {!compact && card.keyTerms?.length > 0 && (
           <div className="mb-3">
             <div className="text-xs font-medium text-ink-400 uppercase tracking-wider mb-1.5">Key Terms</div>
@@ -111,15 +107,13 @@ export default function StudyCard({ card, onClick, compact = false }) {
           </div>
         )}
 
-        {/* Clinical tie-in snippet */}
         {!compact && card.clinicalTieIn && (
-          <div className="mb-3 p-2 bg-violet-50 rounded-lg border border-violet-100">
-            <div className="text-xs font-medium text-violet-600 uppercase tracking-wider mb-0.5">Clinical</div>
-            <p className="text-xs text-violet-800 leading-relaxed line-clamp-2">{card.clinicalTieIn}</p>
+          <div className="mb-3 p-2 bg-warn-50 rounded-lg border border-warn-100">
+            <div className="text-xs font-medium text-amber-700 uppercase tracking-wider mb-0.5">Clinical</div>
+            <p className="text-xs text-amber-900 leading-relaxed line-clamp-2">{card.clinicalTieIn}</p>
           </div>
         )}
 
-        {/* Footer: tags */}
         {card.tags?.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
             {card.tags.slice(0, 3).map((tag) => (

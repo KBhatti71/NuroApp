@@ -1,5 +1,5 @@
-/**
- * VIEWS — canonical route identifiers used by the custom view-router.
+﻿/**
+ * VIEWS - canonical route identifiers used by the custom view-router.
  *
  * Single source of truth: update here, and all navigation helpers +
  * App.jsx will automatically stay in sync.

@@ -1,13 +1,13 @@
-import ProgressBar from '../ui/ProgressBar';
+﻿import ProgressBar from '../ui/ProgressBar';
 import Spinner from '../ui/Spinner';
 
 const STEPS = [
-  { key: 'parsing', label: 'Parse content', icon: '↑' },
-  { key: 'analyzing_course', label: 'Build course map', icon: '⬡' },
-  { key: 'analyzing_professor', label: 'Analyze professor style', icon: '◈' },
-  { key: 'analyzing_quizzes', label: 'Detect quiz patterns', icon: '▣' },
-  { key: 'detecting_signals', label: 'Identify high-yield concepts', icon: '◎' },
-  { key: 'generating_cards', label: 'Generate study cards', icon: '★' },
+  { key: 'parsing', label: 'Parse content', icon: '\u2191' },
+  { key: 'analyzing_course', label: 'Build course map', icon: '\u25a3' },
+  { key: 'analyzing_professor', label: 'Analyze professor style', icon: '\u25c7' },
+  { key: 'analyzing_quizzes', label: 'Detect quiz patterns', icon: '\u25a6' },
+  { key: 'detecting_signals', label: 'Identify high-yield concepts', icon: '\u25ce' },
+  { key: 'generating_cards', label: 'Generate study cards', icon: '\u2605' },
 ];
 
 const STEP_PROGRESS = {
@@ -35,20 +35,19 @@ export default function PipelineProgress({ pipeline }) {
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
-      {/* Header */}
       <div className="text-center">
         {isComplete ? (
           <>
             <div className="w-14 h-14 rounded-full bg-success-100 flex items-center justify-center text-2xl mx-auto mb-4">
-              ✓
+              \u2713
             </div>
             <h2 className="text-xl font-bold text-ink-900">Analysis Complete</h2>
-            <p className="text-ink-500 text-sm mt-1">Cards have been generated. Navigating to your study deck…</p>
+            <p className="text-ink-500 text-sm mt-1">Cards have been generated. Navigating to your study deck...</p>
           </>
         ) : isError ? (
           <>
             <div className="w-14 h-14 rounded-full bg-danger-100 flex items-center justify-center text-2xl mx-auto mb-4">
-              ⚠
+              \u26a0
             </div>
             <h2 className="text-xl font-bold text-ink-900">Analysis Error</h2>
             <p className="text-ink-500 text-sm mt-1">{pipeline.error}</p>
@@ -59,12 +58,11 @@ export default function PipelineProgress({ pipeline }) {
               <Spinner size="lg" />
             </div>
             <h2 className="text-xl font-bold text-ink-900">Analyzing Your Course Materials</h2>
-            <p className="text-ink-500 text-sm mt-1">Detecting professor patterns and generating professor-aligned study cards…</p>
+            <p className="text-ink-500 text-sm mt-1">Detecting professor patterns and generating professor-aligned study cards...</p>
           </>
         )}
       </div>
 
-      {/* Progress bar */}
       <div>
         <div className="flex items-center justify-between text-xs text-ink-500 mb-2">
           <span>{pipeline.currentStep || 'Starting...'}</span>
@@ -76,27 +74,26 @@ export default function PipelineProgress({ pipeline }) {
         />
       </div>
 
-      {/* Step list */}
-      <div className="bg-surface-0 border border-surface-200 rounded-xl overflow-hidden">
+      <div className="surface-card overflow-hidden">
         {STEPS.map((step, idx) => {
           const stepStatus = getStepStatus(step.key, status, progress);
           return (
             <div
               key={step.key}
               className={`flex items-center gap-4 px-5 py-3.5 ${
-                idx < STEPS.length - 1 ? 'border-b border-surface-200' : ''
-              } transition-colors ${stepStatus === 'active' ? 'bg-primary-50' : ''}`}
+                idx < STEPS.length - 1 ? 'border-b border-surface-200/70' : ''
+              } transition-colors ${stepStatus === 'active' ? 'bg-primary-50/70' : ''}`}
             >
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0 transition-all ${
                   stepStatus === 'done'
                     ? 'bg-success-400 text-white'
                     : stepStatus === 'active'
-                    ? 'bg-primary-500 text-white'
+                    ? 'bg-primary-600 text-white'
                     : 'bg-surface-200 text-ink-400'
                 }`}
               >
-                {stepStatus === 'done' ? '✓' : stepStatus === 'active' ? <Spinner size="sm" color="white" /> : step.icon}
+                {stepStatus === 'done' ? '\u2713' : stepStatus === 'active' ? <Spinner size="sm" color="white" /> : step.icon}
               </div>
               <span
                 className={`text-sm font-medium ${
@@ -110,22 +107,21 @@ export default function PipelineProgress({ pipeline }) {
                 {step.label}
               </span>
               {stepStatus === 'done' && (
-                <span className="ml-auto text-xs text-success-400 font-medium">✓</span>
+                <span className="ml-auto text-xs text-success-400 font-medium">\u2713</span>
               )}
               {stepStatus === 'active' && (
-                <span className="ml-auto text-xs text-primary-500 font-medium animate-pulse-soft">Running…</span>
+                <span className="ml-auto text-xs text-primary-500 font-medium animate-pulse-soft">Running...</span>
               )}
             </div>
           );
         })}
       </div>
 
-      {/* Live log */}
       {log.length > 0 && (
         <div className="bg-ink-900 rounded-xl p-4 space-y-1.5 max-h-36 overflow-y-auto scrollbar-thin">
           {log.map((line, i) => (
             <div key={i} className="flex items-start gap-2">
-              <span className="text-primary-500 text-xs font-mono shrink-0 mt-0.5">→</span>
+              <span className="text-primary-200 text-xs font-mono shrink-0 mt-0.5">\u2192</span>
               <span className="text-xs text-ink-300 font-mono leading-relaxed">{line}</span>
             </div>
           ))}

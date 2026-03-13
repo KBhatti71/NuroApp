@@ -1,4 +1,4 @@
-import ImportanceBadge from './ImportanceBadge';
+﻿import ImportanceBadge from './ImportanceBadge';
 
 const REASON_LABELS = {
   keyword:      'Keyword',
@@ -12,7 +12,7 @@ const REASON_LABELS = {
 };
 
 /**
- * MomentCard — renders a single important moment from a session analysis.
+ * MomentCard - renders a single important moment from a session analysis.
  *
  * Used in both School Mode (lecture moments) and Work Mode (meeting moments).
  *
@@ -24,7 +24,7 @@ export default function MomentCard({ moment, school = false }) {
   const reasonLabel = REASON_LABELS[reason] ?? reason ?? '';
 
   return (
-    <div className="flex gap-3 p-3 rounded-xl border bg-surface-0 hover:shadow-card transition-shadow">
+    <div className="flex gap-3 p-3 rounded-xl border bg-surface-0/85 hover:shadow-card transition-shadow">
       <div className="flex flex-col items-center gap-1 pt-0.5 shrink-0">
         <ImportanceBadge score={score} compact />
       </div>
@@ -33,8 +33,8 @@ export default function MomentCard({ moment, school = false }) {
         {reasonLabel && (
           <span className={`mt-1 inline-block text-xs px-1.5 py-0.5 rounded font-medium
             ${school
-              ? 'bg-violet-50 text-violet-600'
-              : 'bg-sky-50 text-sky-600'
+              ? 'bg-primary-50 text-primary-700'
+              : 'bg-warn-50 text-amber-700'
             }`}>
             {reasonLabel}
           </span>

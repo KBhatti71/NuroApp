@@ -1,4 +1,4 @@
-import { useStudyMode } from '../../hooks/useStudyMode';
+﻿import { useStudyMode } from '../../hooks/useStudyMode';
 import { useAppContext } from '../../hooks/useAppContext';
 
 export default function CardFilters() {
@@ -11,8 +11,7 @@ export default function CardFilters() {
     filters.minQuizLikelihood > 0 || filters.tags?.length > 0;
 
   return (
-    <div className="flex flex-wrap items-center gap-3 p-4 bg-surface-0 border border-surface-200 rounded-xl">
-      {/* Search */}
+    <div className="flex flex-wrap items-center gap-3 p-4 surface-card">
       <div className="flex-1 min-w-40">
         <label htmlFor="card-search" className="sr-only">Search cards by topic or term</label>
         <input
@@ -21,17 +20,16 @@ export default function CardFilters() {
           placeholder="Search topics, terms..."
           value={filters.searchQuery}
           onChange={(e) => setFilter({ searchQuery: e.target.value })}
-          className="w-full px-3 py-2 bg-surface-50 border border-surface-200 rounded-lg text-sm text-ink-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-surface-0"
+          className="w-full px-3 py-2 bg-surface-50 border border-surface-200/70 rounded-lg text-sm text-ink-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-surface-0"
         />
       </div>
 
-      {/* Unit filter */}
       {units.length > 0 && (
         <select
           aria-label="Filter by unit"
           value={filters.unitId || ''}
           onChange={(e) => setFilter({ unitId: e.target.value || null })}
-          className="px-3 py-2 bg-surface-50 border border-surface-200 rounded-lg text-sm text-ink-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="px-3 py-2 bg-surface-50 border border-surface-200/70 rounded-lg text-sm text-ink-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           <option value="">All Units</option>
           {units.map(u => (
@@ -40,10 +38,9 @@ export default function CardFilters() {
         </select>
       )}
 
-      {/* Quiz likelihood slider */}
       <div className="flex items-center gap-2 min-w-36">
         <label htmlFor="likelihood-slider" className="text-xs text-ink-500 shrink-0">
-          <span aria-hidden="true">Min ★</span>
+          <span aria-hidden="true">Min \u2605</span>
           <span className="sr-only">Minimum quiz likelihood</span>
         </label>
         <input
@@ -62,20 +59,18 @@ export default function CardFilters() {
         </span>
       </div>
 
-      {/* Pinned toggle */}
       <button
         onClick={() => setFilter({ pinnedOnly: !filters.pinnedOnly })}
         aria-pressed={filters.pinnedOnly}
         className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
           filters.pinnedOnly
-            ? 'bg-warn-100 text-yellow-700 border border-warn-100'
-            : 'bg-surface-50 text-ink-600 border border-surface-200 hover:bg-surface-100'
+            ? 'bg-warn-50 text-amber-700 border border-warn-100'
+            : 'bg-surface-50 text-ink-600 border border-surface-200/70 hover:bg-surface-100'
         }`}
       >
-        <span aria-hidden="true">★</span> Pinned only
+        <span aria-hidden="true">\u2605</span> Pinned only
       </button>
 
-      {/* Reset */}
       {hasActiveFilters && (
         <button
           onClick={resetFilters}
@@ -85,7 +80,6 @@ export default function CardFilters() {
         </button>
       )}
 
-      {/* Count */}
       <div className="text-xs text-ink-400 ml-auto shrink-0">
         {allCards.length} card{allCards.length !== 1 ? 's' : ''}
       </div>

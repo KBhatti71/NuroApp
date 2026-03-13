@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 
 export default function Modal({ isOpen, onClose, title, children, size = 'md' }) {
   useEffect(() => {
@@ -23,15 +23,15 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-900/40 backdrop-blur-sm animate-fade-in"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className={`bg-surface-0 rounded-2xl shadow-modal w-full ${sizes[size]} max-h-[90vh] flex flex-col animate-slide-up`}>
+      <div className={`bg-surface-0/90 rounded-2xl shadow-modal w-full ${sizes[size]} max-h-[90vh] flex flex-col animate-slide-up`}>
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-surface-200 shrink-0">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-surface-200/70 shrink-0">
             <h2 className="text-base font-semibold text-ink-900">{title}</h2>
             <button
               onClick={onClose}
               className="w-8 h-8 flex items-center justify-center rounded-lg text-ink-500 hover:bg-surface-100 hover:text-ink-900 transition-colors text-lg"
             >
-              ×
+              \u00d7
             </button>
           </div>
         )}

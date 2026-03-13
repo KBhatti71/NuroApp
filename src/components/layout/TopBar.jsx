@@ -1,4 +1,5 @@
-import { useAppContext, useNav } from '../../hooks/useAppContext';
+﻿import { useAppContext, useNav } from '../../hooks/useAppContext';
+import Button from '../ui/Button';
 
 const VIEW_TITLES = {
   landing: 'Welcome',
@@ -15,7 +16,7 @@ const VIEW_SUBTITLES = {
   dashboard: 'Your course intelligence overview',
   import: 'Upload and organize your class materials',
   analysis: 'Professor style, quiz patterns, and high-yield signals',
-  card_generation: 'Professor-aligned 3×5 study cards',
+  card_generation: 'Professor-aligned 3x5 study cards',
   study_modes: 'Choose how you want to study',
   export: 'Export cards, quizzes, and review sheets',
 };
@@ -31,10 +32,13 @@ export default function TopBar() {
   const pinnedCount = cards.filter(c => c.pinned).length;
 
   return (
-    <header className="bg-surface-0 border-b border-surface-200 px-6 py-4 flex items-center justify-between no-print shrink-0">
+    <header className="bg-surface-0/70 border-b border-surface-200/70 px-8 py-5 flex items-center justify-between no-print shrink-0 backdrop-blur-md">
       <div>
         <h1 className="text-lg font-semibold text-ink-900">{title}</h1>
         {subtitle && <p className="text-sm text-ink-500 mt-0.5">{subtitle}</p>}
+        {currentView === 'dashboard' && course?.name && (
+          <div className="text-xs text-ink-400 mt-2">{course.name} \u00b7 {course.professor}</div>
+        )}
       </div>
 
       <div className="flex items-center gap-3">
@@ -42,32 +46,23 @@ export default function TopBar() {
           <>
             {pinnedCount > 0 && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-warn-50 text-warn-400 rounded-full text-xs font-semibold border border-warn-100">
-                ★ {pinnedCount} pinned
+                \u2605 {pinnedCount} pinned
               </span>
             )}
-            <button
-              onClick={() => navigate('study_modes')}
-              className="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors"
-            >
-              Study Now →
-            </button>
+            <Button onClick={() => navigate('study_modes')} size="sm">
+              Study Now \u2192
+            </Button>
           </>
         )}
         {currentView === 'dashboard' && course && (
-          <button
-            onClick={() => navigate('import')}
-            className="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors"
-          >
+          <Button onClick={() => navigate('import')} size="sm">
             + Add Materials
-          </button>
+          </Button>
         )}
         {currentView === 'analysis' && (
-          <button
-            onClick={() => navigate('card_generation')}
-            className="px-4 py-2 bg-surface-100 text-ink-700 rounded-lg text-sm font-medium hover:bg-surface-200 transition-colors border border-surface-200"
-          >
-            View Cards →
-          </button>
+          <Button variant="secondary" onClick={() => navigate('card_generation')} size="sm">
+            View Cards \u2192
+          </Button>
         )}
       </div>
     </header>

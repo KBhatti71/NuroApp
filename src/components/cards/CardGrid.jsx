@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import StudyCard from './StudyCard';
 import CardDetailModal from './CardDetailModal';
 
@@ -8,7 +8,7 @@ export default function CardGrid({ cards }) {
   if (cards.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="text-4xl mb-4 opacity-30">▣</div>
+        <div className="text-4xl mb-4 opacity-30">\u25a6</div>
         <h3 className="text-base font-semibold text-ink-700 mb-1">No cards match your filters</h3>
         <p className="text-sm text-ink-400">Try adjusting the filters above</p>
       </div>

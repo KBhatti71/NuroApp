@@ -1,4 +1,4 @@
-import { useAppContext } from '../hooks/useAppContext';
+﻿import { useAppContext } from '../hooks/useAppContext';
 import { ACTIONS } from '../context/actions';
 import { usePipeline } from '../hooks/usePipeline';
 import { parseFileContent, parseTextContent } from '../services/pipeline/contentParser';
@@ -6,8 +6,6 @@ import DropZone from '../components/import/DropZone';
 import UrlImportForm from '../components/import/UrlImportForm';
 import SourceList from '../components/import/SourceList';
 import Button from '../components/ui/Button';
-
-const TABS = ['Upload Files', 'Paste Text'];
 
 export default function ImportView() {
   const { state, dispatch } = useAppContext();
@@ -29,32 +27,30 @@ export default function ImportView() {
   const canAnalyze = sources.length > 0 && !isRunning;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      {/* Guidance banner */}
-      <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 flex items-start gap-3">
-        <span className="text-primary-500 text-lg shrink-0 mt-0.5">◎</span>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div className="bg-primary-50/80 border border-primary-200/70 rounded-2xl p-4 flex items-start gap-3">
+        <span className="text-primary-600 text-lg shrink-0 mt-0.5">\u25ce</span>
         <div>
-          <p className="text-sm font-medium text-primary-800">Start with your syllabus for best results</p>
-          <p className="text-sm text-primary-600 mt-0.5">
+          <p className="text-sm font-medium text-primary-900">Start with your syllabus for best results</p>
+          <p className="text-sm text-primary-700 mt-0.5">
             Upload the syllabus first so the AI can build a course map. Then add transcripts, quizzes, slides,
             and notes. Quizzes and transcripts carry the most weight in card generation.
           </p>
         </div>
       </div>
 
-      {/* Weight legend */}
-      <div className="bg-surface-0 border border-surface-200 rounded-xl p-4">
+      <div className="surface-card p-4">
         <h3 className="text-xs font-semibold text-ink-700 uppercase tracking-wider mb-3">Source Signal Weights</h3>
         <div className="flex flex-wrap gap-2">
           {[
-            ['quiz', '#6366f1', 'Quiz (100%)'],
-            ['syllabus', '#8b5cf6', 'Syllabus (90%)'],
-            ['transcript', '#0ea5e9', 'Transcript (85%)'],
-            ['slides', '#10b981', 'Slides (75%)'],
-            ['study_guide', '#14b8a6', 'Study Guide (75%)'],
-            ['notes', '#f59e0b', 'Notes (50%)'],
-            ['textbook', '#6b7280', 'Textbook (35%)'],
-            ['web', '#9ca3af', 'Web (20%)'],
+            ['quiz', '#1e9d91', 'Quiz (100%)'],
+            ['syllabus', '#2f7f68', 'Syllabus (90%)'],
+            ['transcript', '#2e6f9b', 'Transcript (85%)'],
+            ['slides', '#3a8f7a', 'Slides (75%)'],
+            ['study_guide', '#2c8e86', 'Study Guide (75%)'],
+            ['notes', '#b6782e', 'Notes (50%)'],
+            ['textbook', '#6c6258', 'Textbook (35%)'],
+            ['web', '#9a8f84', 'Web (20%)'],
           ].map(([, color, label]) => (
             <span
               key={label}
@@ -68,26 +64,23 @@ export default function ImportView() {
         </div>
       </div>
 
-      {/* Upload tabs */}
-      <div className="bg-surface-0 border border-surface-200 rounded-xl overflow-hidden">
-        <div className="border-b border-surface-200 px-6 pt-5 pb-0">
+      <div className="surface-card overflow-hidden">
+        <div className="border-b border-surface-200/70 px-6 pt-5 pb-0">
           <h2 className="text-base font-semibold text-ink-900 mb-4">Add Course Materials</h2>
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Drop zone */}
           <div>
             <h3 className="text-sm font-medium text-ink-700 mb-2">Upload Files</h3>
             <DropZone onFiles={handleFiles} />
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-surface-200" />
+            <div className="flex-1 h-px bg-surface-200/70" />
             <span className="text-xs text-ink-400 font-medium">OR</span>
-            <div className="flex-1 h-px bg-surface-200" />
+            <div className="flex-1 h-px bg-surface-200/70" />
           </div>
 
-          {/* Paste text */}
           <div>
             <h3 className="text-sm font-medium text-ink-700 mb-2">Paste Content</h3>
             <UrlImportForm onAdd={handlePastedText} />
@@ -95,13 +88,11 @@ export default function ImportView() {
         </div>
       </div>
 
-      {/* Source list */}
       <SourceList />
 
-      {/* Analyze CTA */}
       {sources.length > 0 && (
         <div className="sticky bottom-6">
-          <div className="bg-surface-0 border border-surface-200 rounded-xl p-4 flex items-center justify-between shadow-card-hover">
+          <div className="surface-card p-4 flex items-center justify-between shadow-card-hover">
             <div>
               <p className="text-sm font-semibold text-ink-900">
                 {sources.length} source{sources.length !== 1 ? 's' : ''} ready
@@ -115,7 +106,7 @@ export default function ImportView() {
               disabled={!canAnalyze}
               size="lg"
             >
-              {isRunning ? 'Analyzing...' : 'Analyze Materials →'}
+              {isRunning ? 'Analyzing...' : 'Analyze Materials \u2192'}
             </Button>
           </div>
         </div>

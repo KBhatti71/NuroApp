@@ -1,14 +1,14 @@
-import { getImportanceTier } from '../../constants/modes';
+﻿import { getImportanceTier } from '../../constants/modes';
 
 /**
- * ImportanceBadge — displays ⭐/⭐⭐/⭐⭐⭐ importance indicator.
+ * ImportanceBadge - displays star-based importance indicator.
  *
  * @param {number}  score   - 0-100 importance score
  * @param {boolean} compact - if true, shows only stars (no label)
  */
 export default function ImportanceBadge({ score = 0, compact = false }) {
   const tier = getImportanceTier(score);
-  const stars = '★'.repeat(tier.stars) + '☆'.repeat(3 - tier.stars);
+  const stars = '\u2605'.repeat(tier.stars) + '\u2606'.repeat(3 - tier.stars);
 
   if (compact) {
     return (

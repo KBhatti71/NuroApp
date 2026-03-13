@@ -1,7 +1,6 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+﻿import { useState, useCallback } from 'react';
 import { v4 as uuid } from 'uuid';
-
-const ToastContext = createContext(null);
+import { ToastContext } from './toastContext';
 
 const TYPE_STYLES = {
   success: 'bg-emerald-800 text-white',
@@ -46,17 +45,11 @@ export function ToastProvider({ children }) {
               aria-label="Dismiss"
               className="shrink-0 text-white/60 hover:text-white transition-colors text-base leading-none"
             >
-              ×
+              \u00d7
             </button>
           </div>
         ))}
       </div>
     </ToastContext.Provider>
   );
-}
-
-export function useToast() {
-  const ctx = useContext(ToastContext);
-  if (!ctx) throw new Error('useToast must be used within ToastProvider');
-  return ctx.toast;
 }

@@ -1,21 +1,21 @@
-function getLikelihoodColor(score) {
-  if (score >= 85) return { bar: '#34d399', bg: 'bg-success-50', text: 'text-green-700', label: 'Very High' };
-  if (score >= 70) return { bar: '#fbbf24', bg: 'bg-warn-50', text: 'text-yellow-700', label: 'High' };
-  if (score >= 55) return { bar: '#f59e0b', bg: 'bg-amber-50', text: 'text-amber-700', label: 'Medium' };
-  return { bar: '#f87171', bg: 'bg-danger-50', text: 'text-red-700', label: 'Lower' };
+﻿function getLikelihoodColor(score) {
+  if (score >= 85) return { bar: '#3cbf8f', bg: 'bg-success-50', text: 'text-emerald-700', label: 'Very High' };
+  if (score >= 70) return { bar: '#f2b84b', bg: 'bg-warn-50', text: 'text-amber-700', label: 'High' };
+  if (score >= 55) return { bar: '#b6782e', bg: 'bg-amber-50', text: 'text-amber-700', label: 'Medium' };
+  return { bar: '#e76666', bg: 'bg-danger-50', text: 'text-danger-400', label: 'Lower' };
 }
 
 export default function ConceptHeatmap({ concepts }) {
   if (!concepts || concepts.length === 0) return null;
 
   return (
-    <div className="bg-surface-0 border border-surface-200 rounded-xl p-5 space-y-4">
+    <div className="surface-card p-5 space-y-4">
       <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-teal-100 flex items-center justify-center text-sm">◎</div>
+        <div className="w-7 h-7 rounded-lg bg-primary-100 flex items-center justify-center text-sm">\u25ce</div>
         <h3 className="text-sm font-semibold text-ink-900">High-Yield Concepts</h3>
       </div>
 
-      <p className="text-xs text-ink-500">Ranked by cross-source frequency × source weighting × quiz signal.</p>
+      <p className="text-xs text-ink-500">Ranked by cross-source frequency \u00d7 source weighting \u00d7 quiz signal.</p>
 
       <div className="space-y-2.5">
         {concepts.map((concept, i) => {
@@ -51,10 +51,10 @@ export default function ConceptHeatmap({ concepts }) {
 
       <div className="flex gap-3 pt-1 flex-wrap">
         {[
-          { label: 'Very High', color: '#34d399' },
-          { label: 'High', color: '#fbbf24' },
-          { label: 'Medium', color: '#f59e0b' },
-          { label: 'Lower', color: '#f87171' },
+          { label: 'Very High', color: '#3cbf8f' },
+          { label: 'High', color: '#f2b84b' },
+          { label: 'Medium', color: '#b6782e' },
+          { label: 'Lower', color: '#e76666' },
         ].map(({ label, color }) => (
           <div key={label} className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />

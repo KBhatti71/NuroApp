@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Spline+Sans:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,7 +10,13 @@
   }
   body {
     margin: 0;
-    @apply bg-surface-50 text-ink-900 font-sans antialiased;
+    @apply text-ink-900 font-sans antialiased;
+    background-color: #f7f4ee;
+    background-image:
+      radial-gradient(1200px circle at 10% -10%, rgba(30, 157, 145, 0.12), transparent 55%),
+      radial-gradient(900px circle at 90% -20%, rgba(242, 184, 75, 0.16), transparent 55%),
+      linear-gradient(180deg, #fbf8f2 0%, #f3efe6 48%, #efe9df 100%);
+    min-height: 100%;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
   button {
@@ -19,6 +27,21 @@
   }
   input, textarea, select {
     font-family: inherit;
+  }
+}
+
+@layer components {
+  .surface-card {
+    @apply bg-surface-0/80 border border-surface-200/70 rounded-2xl shadow-card backdrop-blur-sm;
+  }
+  .surface-panel {
+    @apply bg-surface-0/60 border border-surface-200/60 rounded-2xl backdrop-blur-sm;
+  }
+  .section-title {
+    @apply text-xl font-semibold text-ink-900 tracking-tight;
+  }
+  .section-subtitle {
+    @apply text-sm text-ink-500;
   }
 }
 
@@ -46,7 +69,7 @@
     background: transparent;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1;
+    background-color: rgba(168, 155, 139, 0.7);
     border-radius: 9999px;
   }
 }

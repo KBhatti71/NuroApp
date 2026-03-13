@@ -1,7 +1,7 @@
-import { Component } from 'react';
+﻿import { Component } from 'react';
 
 /**
- * ErrorBoundary — catches render/lifecycle errors in the subtree and
+ * ErrorBoundary - catches render/lifecycle errors in the subtree and
  * renders a graceful fallback instead of a blank white screen.
  *
  * Usage:
@@ -38,7 +38,7 @@ export default class ErrorBoundary extends Component {
 
     return (
       <div className="flex flex-col items-center justify-center min-h-[40vh] gap-4 p-8 text-center">
-        <div className="text-4xl">⚠️</div>
+        <div className="text-4xl">\u26a0</div>
         <h2 className="text-xl font-semibold text-ink-900">Something went wrong</h2>
         <p className="text-sm text-ink-500 max-w-md">
           {error?.message ?? 'An unexpected error occurred. Reload the page or click below to try again.'}

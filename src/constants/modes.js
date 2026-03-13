@@ -1,5 +1,5 @@
-/**
- * modes.js — Canonical constants for the Emotional Intelligence Layer.
+﻿/**
+ * modes.js - Canonical constants for the Emotional Intelligence Layer.
  *
  * APP_MODE:          The top-level context the user is operating in.
  * SESSION_TYPE:      What kind of session is being captured.
@@ -27,21 +27,21 @@ export const SESSION_TYPE = {
 };
 
 export const SESSION_TYPE_META = {
-  [SESSION_TYPE.LECTURE]:      { label: 'Lecture',       icon: '📚', mode: APP_MODE.SCHOOL },
-  [SESSION_TYPE.STUDY_GROUP]:  { label: 'Study Group',   icon: '👥', mode: APP_MODE.SCHOOL },
-  [SESSION_TYPE.OFFICE_HOURS]: { label: 'Office Hours',  icon: '🗓️', mode: APP_MODE.SCHOOL },
-  [SESSION_TYPE.MEETING]:      { label: 'Meeting',       icon: '💼', mode: APP_MODE.WORK },
-  [SESSION_TYPE.ONE_ON_ONE]:   { label: '1:1',           icon: '🤝', mode: APP_MODE.WORK },
-  [SESSION_TYPE.PRESENTATION]: { label: 'Presentation',  icon: '📊', mode: APP_MODE.WORK },
-  [SESSION_TYPE.STANDUP]:      { label: 'Standup',       icon: '⚡', mode: APP_MODE.WORK },
+  [SESSION_TYPE.LECTURE]:      { label: 'Lecture',       icon: '\u{1f4da}', mode: APP_MODE.SCHOOL },
+  [SESSION_TYPE.STUDY_GROUP]:  { label: 'Study Group',   icon: '\u{1f465}', mode: APP_MODE.SCHOOL },
+  [SESSION_TYPE.OFFICE_HOURS]: { label: 'Office Hours',  icon: '\u{1f5d3}', mode: APP_MODE.SCHOOL },
+  [SESSION_TYPE.MEETING]:      { label: 'Meeting',       icon: '\u{1f4bc}', mode: APP_MODE.WORK },
+  [SESSION_TYPE.ONE_ON_ONE]:   { label: '1:1',           icon: '\u{1f91d}', mode: APP_MODE.WORK },
+  [SESSION_TYPE.PRESENTATION]: { label: 'Presentation',  icon: '\u{1f4ca}', mode: APP_MODE.WORK },
+  [SESSION_TYPE.STANDUP]:      { label: 'Standup',       icon: '\u26a1', mode: APP_MODE.WORK },
 };
 
-/** Importance buckets — maps a 0-100 score to display metadata. */
+/** Importance buckets - maps a 0-100 score to display metadata. */
 export const IMPORTANCE = {
-  CRITICAL: { min: 75, label: 'Critical',  stars: 3, color: 'text-red-600',    bg: 'bg-red-50',    border: 'border-red-200'    },
-  HIGH:     { min: 50, label: 'High',      stars: 2, color: 'text-amber-600',  bg: 'bg-amber-50',  border: 'border-amber-200'  },
-  MEDIUM:   { min: 25, label: 'Medium',    stars: 1, color: 'text-blue-600',   bg: 'bg-blue-50',   border: 'border-blue-200'   },
-  LOW:      { min: 0,  label: 'Low',       stars: 0, color: 'text-ink-400',    bg: 'bg-surface-50',border: 'border-surface-200'},
+  CRITICAL: { min: 75, label: 'Critical',  stars: 3, color: 'text-danger-400',  bg: 'bg-danger-50',  border: 'border-danger-100' },
+  HIGH:     { min: 50, label: 'High',      stars: 2, color: 'text-warn-400',    bg: 'bg-warn-50',    border: 'border-warn-100' },
+  MEDIUM:   { min: 25, label: 'Medium',    stars: 1, color: 'text-primary-600', bg: 'bg-primary-50', border: 'border-primary-100' },
+  LOW:      { min: 0,  label: 'Low',       stars: 0, color: 'text-ink-400',     bg: 'bg-surface-50', border: 'border-surface-200' },
 };
 
 export function getImportanceTier(score) {

@@ -11,11 +11,11 @@ export default function PageShell({ children }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-surface-50">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar />
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <TopBar />
-        <main className="flex-1 overflow-y-auto scrollbar-thin p-6 animate-fade-in">
+        <main className="flex-1 overflow-y-auto scrollbar-thin px-8 py-7 animate-fade-in">
           {children}
         </main>
       </div>

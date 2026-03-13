@@ -1,4 +1,4 @@
-import { useAppContext } from '../../hooks/useAppContext';
+﻿import { useAppContext } from '../../hooks/useAppContext';
 import { ACTIONS } from '../../context/actions';
 import { SOURCE_TYPE_LABELS, SOURCE_WEIGHTS } from '../../services/pipeline/contentParser';
 import SourceWeightBadge from './SourceWeightBadge';
@@ -39,18 +39,18 @@ export default function SourceList() {
         {sources.map((source) => (
           <div
             key={source.id}
-            className="flex items-center gap-3 p-3 bg-surface-0 border border-surface-200 rounded-xl"
+            className="flex items-center gap-3 p-3 bg-surface-0/80 border border-surface-200/70 rounded-xl"
           >
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm font-medium text-ink-900 truncate max-w-xs">{source.name}</span>
                 <SourceWeightBadge type={source.type} />
                 {source.needsTypeConfirmation && (
-                  <span className="text-xs text-warn-400 font-medium">⚠ Confirm type</span>
+                  <span className="text-xs text-warn-400 font-medium">\u26a0 Confirm type</span>
                 )}
               </div>
               <div className="text-xs text-ink-500 mt-0.5">
-                {source.tokenCount?.toLocaleString()} tokens · {new Date(source.uploadedAt).toLocaleTimeString()}
+                {source.tokenCount?.toLocaleString()} tokens \u00b7 {new Date(source.uploadedAt).toLocaleTimeString()}
               </div>
             </div>
 
@@ -67,7 +67,7 @@ export default function SourceList() {
               className="shrink-0 w-7 h-7 flex items-center justify-center rounded-lg text-ink-400 hover:bg-danger-50 hover:text-danger-400 transition-colors text-sm"
               title="Remove source"
             >
-              ×
+              \u00d7
             </button>
           </div>
         ))}

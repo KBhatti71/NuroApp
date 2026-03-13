@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import StudyCardFlip from '../cards/StudyCardFlip';
 import ProgressBar from '../ui/ProgressBar';
 
@@ -7,7 +7,6 @@ export default function FlashcardMode({ cards }) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [seen, setSeen] = useState(new Set());
 
-  // Ref keeps the keyboard handler stable while always reading the current index.
   const indexRef = useRef(index);
   useEffect(() => { indexRef.current = index; }, [index]);
 
@@ -57,7 +56,6 @@ export default function FlashcardMode({ cards }) {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      {/* Progress */}
       <div className="flex items-center gap-3">
         <span className="text-sm font-medium text-ink-700">{index + 1} / {cards.length}</span>
         <div className="flex-1">
@@ -66,7 +64,6 @@ export default function FlashcardMode({ cards }) {
         <span className="text-xs text-ink-500">{seen.size} seen</span>
       </div>
 
-      {/* Card */}
       <StudyCardFlip
         isFlipped={isFlipped}
         onFlip={setIsFlipped}
@@ -74,14 +71,14 @@ export default function FlashcardMode({ cards }) {
           <div className="space-y-3">
             <div
               className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold mb-1"
-              style={{ backgroundColor: '#14b8a620', color: '#14b8a6' }}
+              style={{ backgroundColor: '#1e9d9120', color: '#1e9d91' }}
             >
               {current.unit?.split(':')[0]}
             </div>
             <h2 className="text-2xl font-bold text-ink-900">{current.topic}</h2>
-            <div className="mt-4 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-              <div className="text-xs font-semibold text-indigo-500 uppercase tracking-wider mb-2">Likely Exam Question</div>
-              <p className="text-sm text-indigo-800 font-medium leading-relaxed">{current.likelyExamQuestion}</p>
+            <div className="mt-4 p-4 bg-primary-50 rounded-xl border border-primary-100">
+              <div className="text-xs font-semibold text-primary-600 uppercase tracking-wider mb-2">Likely Exam Question</div>
+              <p className="text-sm text-primary-900 font-medium leading-relaxed">{current.likelyExamQuestion}</p>
             </div>
           </div>
         }
@@ -105,25 +102,24 @@ export default function FlashcardMode({ cards }) {
             </div>
 
             <div className="border-t border-ink-700 pt-3">
-              <div className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-1">Answer</div>
+              <div className="text-xs font-semibold text-primary-300 uppercase tracking-wider mb-1">Answer</div>
               <p className="text-xs text-ink-200 leading-relaxed">{current.likelyExamAnswer}</p>
             </div>
           </div>
         }
       />
 
-      {/* Controls */}
       <div className="flex items-center justify-between gap-3">
         <button
           onClick={prev}
           disabled={index === 0}
           className="px-5 py-2.5 bg-surface-100 text-ink-700 rounded-xl text-sm font-medium hover:bg-surface-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
-          ← Prev
+          \u2190 Prev
         </button>
 
         <div className="text-xs text-ink-400 text-center">
-          Space to flip · → next · ← back
+          Space to flip \u00b7 \u2192 next \u00b7 \u2190 back
         </div>
 
         {isDone ? (
@@ -131,7 +127,7 @@ export default function FlashcardMode({ cards }) {
             onClick={restart}
             className="px-5 py-2.5 bg-success-400 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity"
           >
-            ↺ Restart
+            \u21ba Restart
           </button>
         ) : (
           <button
@@ -139,7 +135,7 @@ export default function FlashcardMode({ cards }) {
             disabled={isLast}
             className="px-5 py-2.5 bg-ink-900 text-white rounded-xl text-sm font-medium hover:bg-ink-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            Next →
+            Next \u2192
           </button>
         )}
       </div>

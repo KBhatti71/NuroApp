@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useAppContext, useNav } from '../hooks/useAppContext';
 import { ACTIONS } from '../context/actions';
@@ -43,23 +43,22 @@ export default function CourseSetupView() {
     navigate(VIEWS.IMPORT);
   };
 
-  const inputCls = 'w-full px-4 py-3 bg-surface-0 border border-surface-200 rounded-xl text-sm text-ink-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow placeholder:text-ink-300';
+  const inputCls = 'w-full px-4 py-3 bg-surface-0/80 border border-surface-200/70 rounded-xl text-sm text-ink-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow placeholder:text-ink-300';
 
   return (
-    <div className="min-h-screen bg-surface-50 flex items-center justify-center p-6">
+    <div className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-lg">
-        {/* Back link */}
         <button
           onClick={() => navigate(VIEWS.LANDING)}
           className="flex items-center gap-1.5 text-sm text-ink-500 hover:text-ink-900 mb-8 transition-colors"
         >
-          ← Back
+          \u2190 Back
         </button>
 
-        <div className="bg-surface-0 rounded-2xl border border-surface-200 shadow-card p-8">
+        <div className="surface-card p-8">
           <div className="flex items-center gap-3 mb-7">
             <div className="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center">
-              <span className="text-primary-600 text-lg">⬡</span>
+              <span className="text-primary-600 text-lg">\u25a3</span>
             </div>
             <div>
               <h1 className="text-xl font-bold text-ink-900">Create New Course</h1>
@@ -137,7 +136,7 @@ export default function CourseSetupView() {
 
             <div className="pt-2">
               <Button type="submit" size="lg" className="w-full justify-center">
-                Create Course →
+                Create Course \u2192
               </Button>
             </div>
           </form>

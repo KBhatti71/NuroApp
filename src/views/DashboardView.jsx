@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+﻿import { useMemo } from 'react';
 import { useAppContext, useNav } from '../hooks/useAppContext';
 import { usePipeline } from '../hooks/usePipeline';
 import { VIEWS } from '../constants/views';
@@ -12,13 +12,13 @@ function UnitProgressBar({ unit, cards }) {
     : 0;
 
   const UNIT_COLORS = {
-    unit_01: '#6366f1',
-    unit_02: '#0ea5e9',
-    unit_03: '#10b981',
-    unit_04: '#f59e0b',
-    unit_05: '#8b5cf6',
+    unit_01: '#1e9d91',
+    unit_02: '#2e6f9b',
+    unit_03: '#3a8f7a',
+    unit_04: '#b6782e',
+    unit_05: '#2f7f68',
   };
-  const color = UNIT_COLORS[unit.id] || '#14b8a6';
+  const color = UNIT_COLORS[unit.id] || '#1e9d91';
 
   return (
     <div className="flex items-center gap-3 py-2">
@@ -27,7 +27,7 @@ function UnitProgressBar({ unit, cards }) {
           <span className="text-xs font-medium text-ink-700 truncate">{unit.title}</span>
           <div className="flex items-center gap-2 shrink-0 ml-2">
             {unitCards.length > 0 && (
-              <span className="text-xs text-ink-400">★ {avgLikelihood}%</span>
+              <span className="text-xs text-ink-400">\u2605 {avgLikelihood}%</span>
             )}
             <span className="text-xs text-ink-500">{unitCards.length} cards</span>
           </div>
@@ -62,8 +62,7 @@ export default function DashboardView() {
   }, [course]);
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      {/* Course overview */}
+    <div className="max-w-6xl mx-auto space-y-6">
       <Card className="p-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
@@ -78,8 +77,8 @@ export default function DashboardView() {
               {daysUntilExam !== null && (
                 <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
                   daysUntilExam <= 7 ? 'bg-danger-50 text-danger-400' :
-                  daysUntilExam <= 14 ? 'bg-warn-50 text-yellow-700' :
-                  'bg-success-50 text-green-700'
+                  daysUntilExam <= 14 ? 'bg-warn-50 text-amber-700' :
+                  'bg-success-50 text-emerald-700'
                 }`}>
                   {daysUntilExam > 0 ? `${daysUntilExam} days until exam` : 'Exam today!'}
                 </span>
@@ -98,21 +97,20 @@ export default function DashboardView() {
             )}
             {hasCards && (
               <Button onClick={() => navigate(VIEWS.STUDY_MODES)} size="sm">
-                Study Now →
+                Study Now \u2192
               </Button>
             )}
           </div>
         </div>
 
-        {/* Key stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
           {[
-            { label: 'Sources', value: sources.length, icon: '↑', color: 'text-sky-500' },
-            { label: 'Study Cards', value: cards.length, icon: '▣', color: 'text-primary-500' },
-            { label: 'High-Yield Concepts', value: analysis.highYieldConcepts?.length || 0, icon: '★', color: 'text-warn-400' },
-            { label: 'Pinned Cards', value: cards.filter(c => c.pinned).length, icon: '◎', color: 'text-success-400' },
+            { label: 'Sources', value: sources.length, icon: '\u2191', color: 'text-sky-700' },
+            { label: 'Study Cards', value: cards.length, icon: '\u25a6', color: 'text-primary-600' },
+            { label: 'High-Yield Concepts', value: analysis.highYieldConcepts?.length || 0, icon: '\u2605', color: 'text-warn-400' },
+            { label: 'Pinned Cards', value: cards.filter(c => c.pinned).length, icon: '\u25ce', color: 'text-success-400' },
           ].map(({ label, value, icon, color }) => (
-            <div key={label} className="bg-surface-50 rounded-xl p-4 border border-surface-200">
+            <div key={label} className="bg-surface-50/80 rounded-2xl p-4 border border-surface-200/70">
               <div className={`text-lg ${color} mb-1`}>{icon}</div>
               <div className="text-2xl font-bold text-ink-900">{value}</div>
               <div className="text-xs text-ink-500 mt-0.5">{label}</div>
@@ -122,11 +120,10 @@ export default function DashboardView() {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Course map */}
         {courseMap?.units && (
           <Card className="p-5">
             <h3 className="text-sm font-semibold text-ink-900 mb-4">Course Units & Exam Weight</h3>
-            <div className="divide-y divide-surface-200">
+            <div className="divide-y divide-surface-200/70">
               {courseMap.units.map(unit => (
                 <UnitProgressBar key={unit.id} unit={unit} cards={cards} />
               ))}
@@ -134,34 +131,32 @@ export default function DashboardView() {
           </Card>
         )}
 
-        {/* Top concept */}
         {topCard && (
           <Card className="p-5">
             <h3 className="text-sm font-semibold text-ink-900 mb-3">
               Top Priority Card
               <span className="ml-2 text-xs font-normal text-ink-500">Highest quiz likelihood</span>
             </h3>
-            <div className="bg-surface-50 rounded-xl p-4 border border-surface-200">
+            <div className="bg-surface-50/80 rounded-2xl p-4 border border-surface-200/70">
               <div className="text-xs text-ink-400 mb-1">{topCard.unit}</div>
               <div className="text-sm font-bold text-ink-900 mb-1">{topCard.topic}</div>
               <div className="text-xs text-ink-600 leading-relaxed mb-3 line-clamp-3">{topCard.coreIdea}</div>
               <div className="flex items-center justify-between">
-                <span className="text-xs px-2 py-0.5 bg-success-100 text-green-700 rounded-full font-semibold">
-                  ★ {topCard.quizLikelihood}% likely
+                <span className="text-xs px-2 py-0.5 bg-success-100 text-emerald-700 rounded-full font-semibold">
+                  \u2605 {topCard.quizLikelihood}% likely
                 </span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigate(VIEWS.CARD_GENERATION)}
                 >
-                  View all cards →
+                  View all cards \u2192
                 </Button>
               </div>
             </div>
           </Card>
         )}
 
-        {/* Professor analysis summary */}
         {hasAnalysis && (
           <Card className="p-5">
             <h3 className="text-sm font-semibold text-ink-900 mb-3">Professor Intelligence</h3>
@@ -201,30 +196,29 @@ export default function DashboardView() {
               className="mt-3 -ml-2"
               onClick={() => navigate(VIEWS.ANALYSIS)}
             >
-              View full analysis →
+              View full analysis \u2192
             </Button>
           </Card>
         )}
 
-        {/* Quick actions */}
         <Card className="p-5">
           <h3 className="text-sm font-semibold text-ink-900 mb-3">Quick Actions</h3>
           <div className="space-y-2">
             {[
-              { label: 'Import more materials', action: () => navigate(VIEWS.IMPORT), icon: '↑' },
-              { label: 'View intelligence analysis', action: () => navigate(VIEWS.ANALYSIS), icon: '◎' },
-              { label: 'Browse study cards', action: () => navigate(VIEWS.CARD_GENERATION), icon: '▣' },
-              { label: 'Start flashcard mode', action: () => { navigate(VIEWS.STUDY_MODES); }, icon: '◈' },
-              { label: 'Export cards as PDF', action: () => navigate(VIEWS.EXPORT), icon: '↗' },
+              { label: 'Import more materials', action: () => navigate(VIEWS.IMPORT), icon: '\u2191' },
+              { label: 'View intelligence analysis', action: () => navigate(VIEWS.ANALYSIS), icon: '\u25ce' },
+              { label: 'Browse study cards', action: () => navigate(VIEWS.CARD_GENERATION), icon: '\u25a6' },
+              { label: 'Start flashcard mode', action: () => { navigate(VIEWS.STUDY_MODES); }, icon: '\u25c7' },
+              { label: 'Export cards as PDF', action: () => navigate(VIEWS.EXPORT), icon: '\u2197' },
             ].map(({ label, action, icon }) => (
               <button
                 key={label}
                 onClick={action}
-                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-ink-700 hover:bg-surface-100 rounded-lg transition-colors text-left"
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-ink-700 hover:bg-surface-100 rounded-xl transition-colors text-left"
               >
                 <span className="text-ink-400 text-base w-5 text-center">{icon}</span>
                 {label}
-                <span className="ml-auto text-ink-300">→</span>
+                <span className="ml-auto text-ink-300">\u2192</span>
               </button>
             ))}
           </div>

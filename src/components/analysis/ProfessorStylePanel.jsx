@@ -1,4 +1,4 @@
-export default function ProfessorStylePanel({ style }) {
+﻿export default function ProfessorStylePanel({ style }) {
   if (!style) return null;
 
   const styleLabels = {
@@ -16,21 +16,21 @@ export default function ProfessorStylePanel({ style }) {
   };
 
   const emphasisColors = {
-    clinical: 'bg-violet-100 text-violet-700',
-    molecular: 'bg-sky-100 text-sky-700',
-    systems: 'bg-teal-100 text-teal-700',
-    balanced: 'bg-emerald-100 text-emerald-700',
+    clinical: 'bg-warn-50 text-amber-700',
+    molecular: 'bg-primary-50 text-primary-700',
+    systems: 'bg-success-50 text-emerald-700',
+    balanced: 'bg-surface-100 text-ink-700',
   };
 
   return (
-    <div className="bg-surface-0 border border-surface-200 rounded-xl p-5 space-y-4">
+    <div className="surface-card p-5 space-y-4">
       <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center text-sm">◈</div>
+        <div className="w-7 h-7 rounded-lg bg-primary-100 flex items-center justify-center text-sm">\u25c7</div>
         <h3 className="text-sm font-semibold text-ink-900">Professor Style</h3>
       </div>
 
       <div className="flex gap-2 flex-wrap">
-        <span className="px-2.5 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-semibold">
+        <span className="px-2.5 py-1 bg-surface-100 text-ink-700 rounded-full text-xs font-semibold">
           {styleLabels[style.lectureStyle] || style.lectureStyle}
         </span>
         <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${emphasisColors[style.emphasisLevel] || 'bg-surface-100 text-ink-700'}`}>
@@ -50,7 +50,7 @@ export default function ProfessorStylePanel({ style }) {
           <div className="space-y-1">
             {style.phrasePatterns.slice(0, 5).map((phrase, i) => (
               <div key={i} className="flex items-start gap-2">
-                <span className="text-primary-400 text-xs shrink-0 mt-0.5">→</span>
+                <span className="text-primary-400 text-xs shrink-0 mt-0.5">\u2192</span>
                 <span className="text-xs text-ink-700 font-mono">{phrase}</span>
               </div>
             ))}
@@ -78,7 +78,7 @@ export default function ProfessorStylePanel({ style }) {
             {style.favoriteTopics.map((topic, i) => (
               <div key={i} className="flex items-center gap-2">
                 <div
-                  className="h-1.5 rounded-full bg-primary-500"
+                  className="h-1.5 rounded-full bg-primary-600"
                   style={{ width: `${Math.max(20, 100 - i * 15)}%` }}
                 />
                 <span className="text-xs text-ink-600 whitespace-nowrap">{topic}</span>

@@ -1,8 +1,8 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import Modal from '../ui/Modal';
 import { useAppContext } from '../../hooks/useAppContext';
 import { ACTIONS } from '../../context/actions';
-import { useToast } from '../ui/Toast';
+import { useToast } from '../ui/useToast';
 
 const SECTION_LABEL = ({ children }) => (
   <div className="text-xs font-semibold text-ink-400 uppercase tracking-wider mb-1.5">{children}</div>
@@ -11,11 +11,11 @@ const SECTION_LABEL = ({ children }) => (
 const TABS = ['Full Card', 'Exam Cram', 'Professor Wording', 'Edit'];
 
 const UNIT_COLORS = {
-  unit_01: '#6366f1',
-  unit_02: '#0ea5e9',
-  unit_03: '#10b981',
-  unit_04: '#f59e0b',
-  unit_05: '#8b5cf6',
+  unit_01: '#1e9d91',
+  unit_02: '#2e6f9b',
+  unit_03: '#3a8f7a',
+  unit_04: '#b6782e',
+  unit_05: '#2f7f68',
 };
 
 export default function CardDetailModal({ card, isOpen, onClose }) {
@@ -23,11 +23,10 @@ export default function CardDetailModal({ card, isOpen, onClose }) {
   const toast = useToast();
   const [activeTab, setActiveTab] = useState('Full Card');
   const [editedCard, setEditedCard] = useState(null);
-  const [newTag, setNewTag] = useState('');
 
   if (!card) return null;
 
-  const unitColor = UNIT_COLORS[card.unitId] || '#14b8a6';
+  const unitColor = UNIT_COLORS[card.unitId] || '#1e9d91';
 
   const handlePin = () => {
     dispatch({ type: ACTIONS.TOGGLE_PIN, payload: card.id });
@@ -53,23 +52,11 @@ export default function CardDetailModal({ card, isOpen, onClose }) {
     onClose();
   };
 
-  const handleAddTag = () => {
-    const tag = newTag.trim().toLowerCase().replace(/\s+/g, '-');
-    if (!tag || (card.tags ?? []).includes(tag)) return;
-    dispatch({ type: ACTIONS.ADD_CARD_TAG, payload: { id: card.id, tag } });
-    setNewTag('');
-  };
-
-  const handleRemoveTag = (tag) => {
-    dispatch({ type: ACTIONS.REMOVE_CARD_TAG, payload: { id: card.id, tag } });
-  };
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
-      {/* Colored header bar */}
       <div className="h-1.5" style={{ backgroundColor: unitColor }} />
 
-      <div className="px-6 py-5 border-b border-surface-200">
+      <div className="px-6 py-5 border-b border-surface-200/70">
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -82,11 +69,11 @@ export default function CardDetailModal({ card, isOpen, onClose }) {
               <span
                 className="px-2 py-0.5 rounded text-xs font-bold"
                 style={{
-                  backgroundColor: card.quizLikelihood >= 85 ? '#dcfce7' : '#fef3c7',
-                  color: card.quizLikelihood >= 85 ? '#15803d' : '#92400e',
+                  backgroundColor: card.quizLikelihood >= 85 ? '#e9fbf4' : '#fff7e6',
+                  color: card.quizLikelihood >= 85 ? '#1f7a64' : '#9a5e14',
                 }}
               >
-                ★ Quiz Likelihood: {card.quizLikelihood}%
+                \u2605 Quiz Likelihood: {card.quizLikelihood}%
               </span>
             </div>
             <h2 className="text-lg font-bold text-ink-900">{card.topic}</h2>
@@ -100,26 +87,25 @@ export default function CardDetailModal({ card, isOpen, onClose }) {
                 card.pinned ? 'text-warn-400 bg-warn-50' : 'text-ink-400 hover:bg-surface-100'
               }`}
             >
-              <span aria-hidden="true">★</span>
+              <span aria-hidden="true">\u2605</span>
             </button>
             <button
               onClick={handleCopy}
               aria-label="Copy card text to clipboard"
               className="w-8 h-8 flex items-center justify-center rounded-lg text-ink-400 hover:bg-surface-100 text-xs transition-colors"
             >
-              <span aria-hidden="true">⎘</span>
+              <span aria-hidden="true">{'\u{1f4cb}'}</span>
             </button>
             <button
               onClick={onClose}
               aria-label="Close card detail"
               className="w-8 h-8 flex items-center justify-center rounded-lg text-ink-400 hover:bg-surface-100 text-lg transition-colors"
             >
-              <span aria-hidden="true">×</span>
+              <span aria-hidden="true">\u00d7</span>
             </button>
           </div>
         </div>
 
-        {/* Tabs */}
         <div role="tablist" aria-label="Card view tabs" className="flex gap-1 mt-4">
           {TABS.map(tab => (
             <button
@@ -161,32 +147,32 @@ export default function CardDetailModal({ card, isOpen, onClose }) {
 
             <div>
               <SECTION_LABEL>Mechanism / Pathway</SECTION_LABEL>
-              <div className="text-sm text-ink-700 leading-relaxed whitespace-pre-line bg-surface-50 rounded-lg p-3 border border-surface-200 font-mono text-xs">
+              <div className="text-sm text-ink-700 leading-relaxed whitespace-pre-line bg-surface-50 rounded-lg p-3 border border-surface-200/70 font-mono text-xs">
                 {card.mechanism}
               </div>
             </div>
 
-            <div className="p-3 bg-violet-50 rounded-lg border border-violet-100">
+            <div className="p-3 bg-warn-50 rounded-lg border border-warn-100">
               <SECTION_LABEL>Clinical Tie-In</SECTION_LABEL>
-              <p className="text-sm text-violet-800 leading-relaxed">{card.clinicalTieIn}</p>
+              <p className="text-sm text-amber-900 leading-relaxed">{card.clinicalTieIn}</p>
             </div>
 
-            <div className="p-3 bg-teal-50 rounded-lg border border-teal-100">
+            <div className="p-3 bg-primary-50/70 rounded-lg border border-primary-100">
               <SECTION_LABEL>Professor Emphasis</SECTION_LABEL>
-              <p className="text-sm text-teal-800 leading-relaxed">{card.professorEmphasis}</p>
+              <p className="text-sm text-primary-900 leading-relaxed">{card.professorEmphasis}</p>
             </div>
 
-            <div className="p-3 bg-amber-50 rounded-lg border border-amber-100">
+            <div className="p-3 bg-surface-50 rounded-lg border border-surface-200/70">
               <SECTION_LABEL>Memory Hook</SECTION_LABEL>
-              <p className="text-sm text-amber-800 leading-relaxed font-medium">{card.memoryHook}</p>
+              <p className="text-sm text-ink-700 leading-relaxed font-medium">{card.memoryHook}</p>
             </div>
 
-            <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+            <div className="p-3 bg-primary-50/70 rounded-lg border border-primary-100">
               <SECTION_LABEL>Likely Exam Question</SECTION_LABEL>
-              <p className="text-sm text-indigo-800 font-medium mb-2">{card.likelyExamQuestion}</p>
-              <div className="border-t border-indigo-200 pt-2 mt-2">
-                <div className="text-xs font-semibold text-indigo-500 uppercase tracking-wider mb-1">Model Answer</div>
-                <p className="text-sm text-indigo-700 leading-relaxed">{card.likelyExamAnswer}</p>
+              <p className="text-sm text-primary-900 font-medium mb-2">{card.likelyExamQuestion}</p>
+              <div className="border-t border-primary-200 pt-2 mt-2">
+                <div className="text-xs font-semibold text-primary-600 uppercase tracking-wider mb-1">Model Answer</div>
+                <p className="text-sm text-primary-700 leading-relaxed">{card.likelyExamAnswer}</p>
               </div>
             </div>
 
@@ -213,7 +199,7 @@ export default function CardDetailModal({ card, isOpen, onClose }) {
               <div className="space-y-1.5">
                 {card.studyModeVariants.examCram.mustKnow?.map((point, i) => (
                   <div key={i} className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary-500 mt-1.5 shrink-0" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary-600 mt-1.5 shrink-0" />
                     <span className="text-sm text-ink-700">{point}</span>
                   </div>
                 ))}
@@ -229,11 +215,11 @@ export default function CardDetailModal({ card, isOpen, onClose }) {
               <h3 className="text-base font-bold text-ink-900">{card.studyModeVariants.professorWording.topic}</h3>
             </div>
             <div className="p-4 bg-primary-50 rounded-xl border border-primary-100">
-              <div className="text-xs font-semibold text-primary-600 uppercase tracking-wider mb-2">Core Idea — How She'd Say It</div>
+              <div className="text-xs font-semibold text-primary-600 uppercase tracking-wider mb-2">Core Idea - How She'd Say It</div>
               <p className="text-sm text-primary-900 leading-relaxed">{card.studyModeVariants.professorWording.coreIdea}</p>
             </div>
             <div>
-              <div className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1">Mechanism — Professor's Focus</div>
+              <div className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-1">Mechanism - Professor's Focus</div>
               <p className="text-sm text-ink-700 leading-relaxed">{card.studyModeVariants.professorWording.mechanism}</p>
             </div>
           </div>
@@ -247,7 +233,7 @@ export default function CardDetailModal({ card, isOpen, onClose }) {
                 type="text"
                 value={editedCard.topic}
                 onChange={(e) => setEditedCard(c => ({ ...c, topic: e.target.value }))}
-                className="w-full px-3 py-2 border border-surface-200 rounded-lg text-sm text-ink-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-3 py-2 border border-surface-200/70 rounded-lg text-sm text-ink-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
             <div>
@@ -256,7 +242,7 @@ export default function CardDetailModal({ card, isOpen, onClose }) {
                 value={editedCard.coreIdea}
                 onChange={(e) => setEditedCard(c => ({ ...c, coreIdea: e.target.value }))}
                 rows={3}
-                className="w-full px-3 py-2 border border-surface-200 rounded-lg text-sm text-ink-700 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-y"
+                className="w-full px-3 py-2 border border-surface-200/70 rounded-lg text-sm text-ink-700 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-y"
               />
             </div>
             <div>
@@ -265,7 +251,7 @@ export default function CardDetailModal({ card, isOpen, onClose }) {
                 value={editedCard.memoryHook}
                 onChange={(e) => setEditedCard(c => ({ ...c, memoryHook: e.target.value }))}
                 rows={2}
-                className="w-full px-3 py-2 border border-surface-200 rounded-lg text-sm text-ink-700 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-y"
+                className="w-full px-3 py-2 border border-surface-200/70 rounded-lg text-sm text-ink-700 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-y"
               />
             </div>
             <div>
@@ -274,13 +260,13 @@ export default function CardDetailModal({ card, isOpen, onClose }) {
                 value={editedCard.likelyExamQuestion}
                 onChange={(e) => setEditedCard(c => ({ ...c, likelyExamQuestion: e.target.value }))}
                 rows={2}
-                className="w-full px-3 py-2 border border-surface-200 rounded-lg text-sm text-ink-700 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-y"
+                className="w-full px-3 py-2 border border-surface-200/70 rounded-lg text-sm text-ink-700 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-y"
               />
             </div>
             <div className="flex gap-3 pt-2">
               <button
                 onClick={handleSaveEdit}
-                className="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors"
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 transition-colors"
               >
                 Save Changes
               </button>
