@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Modal from '../ui/Modal';
 import { useAppContext } from '../../hooks/useAppContext';
 import { ACTIONS } from '../../context/actions';
+import { useToast } from '../ui/Toast';
 
 const SECTION_LABEL = ({ children }) => (
   <div className="text-xs font-semibold text-ink-400 uppercase tracking-wider mb-1.5">{children}</div>
@@ -19,8 +20,10 @@ const UNIT_COLORS = {
 
 export default function CardDetailModal({ card, isOpen, onClose }) {
   const { dispatch } = useAppContext();
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState('Full Card');
   const [editedCard, setEditedCard] = useState(null);
+  const [newTag, setNewTag] = useState('');
 
   if (!card) return null;
 
@@ -28,18 +31,37 @@ export default function CardDetailModal({ card, isOpen, onClose }) {
 
   const handlePin = () => {
     dispatch({ type: ACTIONS.TOGGLE_PIN, payload: card.id });
+    toast(card.pinned ? 'Card unpinned' : 'Card pinned', 'default', 2000);
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(`${card.topic}\n\n${card.coreIdea}`);
+    toast('Copied to clipboard', 'success', 2000);
   };
 
   const handleSaveEdit = () => {
     if (editedCard) {
       dispatch({ type: ACTIONS.UPDATE_CARD, payload: { id: card.id, updates: editedCard } });
+      toast('Card saved', 'success', 2000);
     }
     setActiveTab('Full Card');
   };
 
   const handleDelete = () => {
     dispatch({ type: ACTIONS.DELETE_CARD, payload: card.id });
+    toast('Card deleted', 'default', 2000);
     onClose();
+  };
+
+  const handleAddTag = () => {
+    const tag = newTag.trim().toLowerCase().replace(/\s+/g, '-');
+    if (!tag || (card.tags ?? []).includes(tag)) return;
+    dispatch({ type: ACTIONS.ADD_CARD_TAG, payload: { id: card.id, tag } });
+    setNewTag('');
+  };
+
+  const handleRemoveTag = (tag) => {
+    dispatch({ type: ACTIONS.REMOVE_CARD_TAG, payload: { id: card.id, tag } });
   };
 
   return (
@@ -81,7 +103,7 @@ export default function CardDetailModal({ card, isOpen, onClose }) {
               <span aria-hidden="true">★</span>
             </button>
             <button
-              onClick={() => navigator.clipboard.writeText(`${card.topic}\n\n${card.coreIdea}`)}
+              onClick={handleCopy}
               aria-label="Copy card text to clipboard"
               className="w-8 h-8 flex items-center justify-center rounded-lg text-ink-400 hover:bg-surface-100 text-xs transition-colors"
             >
