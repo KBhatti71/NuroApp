@@ -1,4 +1,4 @@
-﻿import { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { v4 as uuid } from 'uuid';
 import { useAppContext } from '../hooks/useAppContext';
 import { useToast } from '../components/ui/useToast';
@@ -40,7 +40,7 @@ const SCHOOL_SESSION_TYPES = Object.entries(SESSION_TYPE_META)
   .filter(([, meta]) => meta.mode === APP_MODE.SCHOOL)
   .map(([id, meta]) => ({ id, ...meta }));
 
-function NewSessionForm({ onCreate }) {
+function NewSessionForm({ onCreate, collapsed, onToggle }) {
   const [title, setTitle]     = useState('');
   const [type, setType]       = useState(SESSION_TYPE.LECTURE);
   const [rawText, setRawText] = useState('');
@@ -51,9 +51,27 @@ function NewSessionForm({ onCreate }) {
     setTitle(''); setType(SESSION_TYPE.LECTURE); setRawText('');
   };
 
+  if (collapsed) {
+    return (
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center gap-2 px-4 py-3 surface-card text-sm font-semibold text-primary-700 hover:bg-primary-50 transition-colors rounded-xl border border-primary-200/60"
+      >
+        <span className="text-base">+</span> New Session
+      </button>
+    );
+  }
+
   return (
-    <div className="surface-card p-6 space-y-4">
-      <h3 className="text-sm font-semibold text-ink-900">Capture a new session</h3>
+    <div className="surface-card p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-ink-900">Capture a new session</h3>
+        {onToggle && (
+          <button onClick={onToggle} className="text-xs text-ink-400 hover:text-ink-600">
+            ✕ Cancel
+          </button>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -106,8 +124,8 @@ function NewSessionForm({ onCreate }) {
 // ─── Session Analysis Panel ───────────────────────────────────────────────────
 
 function SessionPanel({ session, dispatch, toast }) {
-  const { analysis, analysisError } = session;
-  const [tab, setTab] = useState('moments');
+  const { analysis, analysisError, rawText } = session;
+  const [tab, setTab] = useState('overview');
   const [saved, setSaved] = useState(false);
 
   const handleSaveToDeck = () => {
@@ -134,50 +152,35 @@ function SessionPanel({ session, dispatch, toast }) {
     );
   }
 
+  const cardCount = (analysis.flashcards ?? []).length;
+
   const tabs = [
-    { id: 'moments',      label: '\u26a1 Key Moments' },
-    { id: 'flashcards',   label: '\u{1f0cf} Flashcards' },
-    { id: 'questions',    label: '\u2753 Questions' },
-    { id: 'suggestions',  label: '\u{1f4cb} Suggestions' },
+    { id: 'overview',    label: '\u{1f4cb} Overview' },
+    { id: 'flashcards',  label: `\u{1f0cf} Flashcards${cardCount ? ` (${cardCount})` : ''}` },
+    { id: 'questions',   label: '\u2753 Questions' },
+    { id: 'moments',     label: '\u26a1 Key Moments' },
+    { id: 'suggestions', label: '\u{1f4a1} Study Tips' },
+    { id: 'notes',       label: '\u{1f4dd} Notes' },
   ];
 
   return (
-    <div className="space-y-4">
-      {/* Summary + save CTA */}
-      <div className="bg-primary-50/80 border border-primary-200/70 rounded-xl p-4">
-        <p className="text-sm text-primary-900 leading-relaxed">{analysis.summary}</p>
-        {(analysis.flashcards ?? []).length > 0 && (
-          <div className="mt-3 pt-3 border-t border-primary-200/50">
-            <button
-              onClick={handleSaveToDeck}
-              disabled={saved}
-              className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-semibold hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {saved
-                ? '✓ Saved to deck'
-                : `🃏 Save ${analysis.flashcards.length} card${analysis.flashcards.length !== 1 ? 's' : ''} to deck`}
-            </button>
-          </div>
+    <div className="space-y-0">
+      {/* Header row: title + save button */}
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-ink-800 truncate">{session.title}</h3>
+        {cardCount > 0 && (
+          <button
+            onClick={handleSaveToDeck}
+            disabled={saved}
+            className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-semibold hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0 ml-3"
+          >
+            {saved ? '✓ Saved' : `\u{1f0cf} Save ${cardCount} card${cardCount !== 1 ? 's' : ''}`}
+          </button>
         )}
       </div>
 
-      {analysis.keyTakeaways?.length > 0 && (
-        <div className="surface-card p-4">
-          <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-2">
-            Top Takeaways
-          </h4>
-          <ol className="space-y-1">
-            {analysis.keyTakeaways.map((t, i) => (
-              <li key={i} className="flex gap-2 text-sm text-ink-800">
-                <span className="text-primary-600 font-bold shrink-0">{i + 1}.</span>
-                {t}
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
-
-      <div className="flex gap-1 border-b border-surface-200/70 pb-0">
+      {/* Tab bar */}
+      <div className="flex gap-1 flex-wrap border-b border-surface-200/70 mb-4">
         {tabs.map(t => (
           <button
             key={t.id}
@@ -193,20 +196,49 @@ function SessionPanel({ session, dispatch, toast }) {
         ))}
       </div>
 
-      {tab === 'moments' && (
-        <div className="space-y-2">
-          {(analysis.importantMoments ?? []).length === 0
-            ? <p className="text-sm text-ink-400 text-center py-6">No important moments detected.</p>
-            : (analysis.importantMoments ?? []).map((m, i) => (
-                <MomentCard key={i} moment={m} school />
-              ))
-          }
+      {/* Overview: summary + takeaways + confusion moments */}
+      {tab === 'overview' && (
+        <div className="space-y-4">
+          <div className="bg-primary-50/80 border border-primary-200/70 rounded-xl p-4">
+            <p className="text-sm text-primary-900 leading-relaxed">{analysis.summary}</p>
+          </div>
+
+          {(analysis.keyTakeaways ?? []).length > 0 && (
+            <div className="surface-card p-4">
+              <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-3">
+                Key Takeaways
+              </h4>
+              <ol className="space-y-1.5">
+                {analysis.keyTakeaways.map((t, i) => (
+                  <li key={i} className="flex gap-2 text-sm text-ink-800">
+                    <span className="text-primary-600 font-bold shrink-0">{i + 1}.</span>
+                    {t}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          {(analysis.confusionMoments ?? []).length > 0 && (
+            <div className="surface-card p-4">
+              <h4 className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-3">
+                ⚠ Confusion Points
+              </h4>
+              <ul className="space-y-1.5">
+                {analysis.confusionMoments.map((c, i) => (
+                  <li key={i} className="text-sm text-ink-700 flex gap-2">
+                    <span className="text-amber-500 shrink-0">·</span> {c}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 
       {tab === 'flashcards' && (
         <div className="space-y-2">
-          {(analysis.flashcards ?? []).length === 0
+          {cardCount === 0
             ? <p className="text-sm text-ink-400 text-center py-6">No flashcards generated.</p>
             : (analysis.flashcards ?? []).map((f, i) => (
                 <div key={i} className="border border-surface-200/70 rounded-xl overflow-hidden">
@@ -242,14 +274,36 @@ function SessionPanel({ session, dispatch, toast }) {
         </div>
       )}
 
+      {tab === 'moments' && (
+        <div className="space-y-2">
+          {(analysis.importantMoments ?? []).length === 0
+            ? <p className="text-sm text-ink-400 text-center py-6">No important moments detected.</p>
+            : (analysis.importantMoments ?? []).map((m, i) => (
+                <MomentCard key={i} moment={m} school />
+              ))
+          }
+        </div>
+      )}
+
       {tab === 'suggestions' && (
         <ul className="space-y-2">
-          {(analysis.studySuggestions ?? []).map((s, i) => (
-            <li key={i} className="flex gap-2 text-sm text-ink-700 bg-surface-50 rounded-lg px-3 py-2">
-              <span className="text-primary-600">\u2192</span> {s}
-            </li>
-          ))}
+          {(analysis.studySuggestions ?? []).length === 0
+            ? <p className="text-sm text-ink-400 text-center py-6">No study suggestions.</p>
+            : (analysis.studySuggestions ?? []).map((s, i) => (
+                <li key={i} className="flex gap-2 text-sm text-ink-700 bg-surface-50 rounded-lg px-3 py-2">
+                  <span className="text-primary-600">{'\u2192'}</span> {s}
+                </li>
+              ))
+          }
         </ul>
+      )}
+
+      {tab === 'notes' && (
+        <div className="bg-surface-50 border border-surface-200/70 rounded-xl p-4">
+          <pre className="text-xs text-ink-700 leading-relaxed whitespace-pre-wrap font-mono">
+            {rawText || <span className="text-ink-400 italic">No original text stored.</span>}
+          </pre>
+        </div>
       )}
     </div>
   );
@@ -259,8 +313,10 @@ export default function SchoolModeView() {
   const { state, dispatch } = useAppContext();
   const toast = useToast();
   const { sessions, activeSessionId } = state;
+  const [formOpen, setFormOpen] = useState(false);
 
   const schoolSessions = sessions.filter(s => s.mode === APP_MODE.SCHOOL);
+  const hasSession     = schoolSessions.length > 0;
   const activeSession  = schoolSessions.find(s => s.id === activeSessionId) ?? schoolSessions[0] ?? null;
 
   const handleCreate = useCallback(async ({ title, type, rawText }) => {
@@ -279,6 +335,7 @@ export default function SchoolModeView() {
     dispatch({ type: ACTIONS.ADD_SESSION, payload: session });
     dispatch({ type: ACTIONS.SET_ACTIVE_SESSION, payload: id });
     dispatch({ type: ACTIONS.SESSION_ANALYSIS_START });
+    setFormOpen(false);
 
     try {
       const analysis = await analyzeLecture(rawText, session.title, type);
@@ -298,19 +355,26 @@ export default function SchoolModeView() {
         <div>
           <h2 className="text-xl font-bold text-ink-900">{'\u{1f4da}'} School Mode</h2>
           <p className="text-sm text-ink-500 mt-0.5">
-            Paste a lecture transcript or notes - AI extracts what matters.
+            Paste a lecture transcript or notes — AI extracts what matters.
           </p>
         </div>
-        <div className="text-xs px-3 py-1.5 bg-primary-100 text-primary-700 rounded-full font-semibold border border-primary-200/70">
-          {schoolSessions.length} session{schoolSessions.length !== 1 ? 's' : ''}
-        </div>
+        {hasSession && (
+          <div className="text-xs px-3 py-1.5 bg-primary-100 text-primary-700 rounded-full font-semibold border border-primary-200/70">
+            {schoolSessions.length} session{schoolSessions.length !== 1 ? 's' : ''}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 space-y-4">
-          <NewSessionForm onCreate={handleCreate} />
+        {/* Left sidebar */}
+        <div className="lg:col-span-1 space-y-3">
+          <NewSessionForm
+            onCreate={handleCreate}
+            collapsed={hasSession && !formOpen}
+            onToggle={hasSession ? () => setFormOpen(o => !o) : null}
+          />
 
-          {schoolSessions.length > 0 && (
+          {hasSession && (
             <div className="surface-card p-4">
               <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-3">Sessions</h4>
               <div className="space-y-1">
@@ -330,6 +394,12 @@ export default function SchoolModeView() {
                     >
                       <span>{meta.icon}</span>
                       <span className="flex-1 truncate font-medium">{s.title}</span>
+                      {s.analysis && !s.analysisError && (
+                        <span className="text-xs text-emerald-600 shrink-0">✓</span>
+                      )}
+                      {!s.analysis && !s.analysisError && (
+                        <Spinner size="sm" />
+                      )}
                       {topScore > 0 && (
                         <span className={`text-xs font-bold ${tier.color}`}>
                           {'\u2605'.repeat(tier.stars)}
@@ -343,6 +413,7 @@ export default function SchoolModeView() {
           )}
         </div>
 
+        {/* Main panel */}
         <div className="lg:col-span-2">
           {activeSession
             ? <SessionPanel session={activeSession} dispatch={dispatch} toast={toast} />

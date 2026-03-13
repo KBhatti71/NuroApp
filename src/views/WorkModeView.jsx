@@ -1,4 +1,4 @@
-﻿import { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { v4 as uuid } from 'uuid';
 import { useAppContext } from '../hooks/useAppContext';
 import { useToast } from '../components/ui/useToast';
@@ -89,7 +89,7 @@ const SENTIMENT_ICON = {
   opposed:    { icon: '\u{1f6ab}', color: 'text-red-600' },
 };
 
-function NewSessionForm({ onCreate }) {
+function NewSessionForm({ onCreate, collapsed, onToggle }) {
   const [title, setTitle]     = useState('');
   const [type, setType]       = useState(SESSION_TYPE.MEETING);
   const [rawText, setRawText] = useState('');
@@ -100,9 +100,27 @@ function NewSessionForm({ onCreate }) {
     setTitle(''); setType(SESSION_TYPE.MEETING); setRawText('');
   };
 
+  if (collapsed) {
+    return (
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center gap-2 px-4 py-3 surface-card text-sm font-semibold text-primary-700 hover:bg-primary-50 transition-colors rounded-xl border border-primary-200/60"
+      >
+        <span className="text-base">+</span> New Session
+      </button>
+    );
+  }
+
   return (
-    <div className="surface-card p-6 space-y-4">
-      <h3 className="text-sm font-semibold text-ink-900">Capture a new session</h3>
+    <div className="surface-card p-5 space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-ink-900">Capture a new session</h3>
+        {onToggle && (
+          <button onClick={onToggle} className="text-xs text-ink-400 hover:text-ink-600">
+            ✕ Cancel
+          </button>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
@@ -155,8 +173,8 @@ function NewSessionForm({ onCreate }) {
 // ─── Session Analysis Panel ───────────────────────────────────────────────────
 
 function SessionPanel({ session, dispatch, toast }) {
-  const { analysis, analysisError } = session;
-  const [tab, setTab] = useState('actions');
+  const { analysis, analysisError, rawText } = session;
+  const [tab, setTab] = useState('overview');
   const [saved, setSaved] = useState(false);
 
   const handleSaveToDeck = () => {
@@ -183,35 +201,36 @@ function SessionPanel({ session, dispatch, toast }) {
     );
   }
 
+  const itemCount = (analysis.actionItems ?? []).length + (analysis.decisions ?? []).length;
+
   const tabs = [
-    { id: 'actions',      label: '\u{1f525} Action Items' },
-    { id: 'decisions',    label: '\u2696 Decisions' },
-    { id: 'stakeholders', label: '\u{1f465} Stakeholders' },
-    { id: 'moments',      label: '\u26a1 Moments' },
-    { id: 'followups',    label: '\u{1f4cc} Follow-ups' },
+    { id: 'overview',      label: '\u{1f4cb} Overview' },
+    { id: 'actions',       label: `\u{1f525} Actions${(analysis.actionItems ?? []).length ? ` (${(analysis.actionItems ?? []).length})` : ''}` },
+    { id: 'decisions',     label: '\u2696 Decisions' },
+    { id: 'stakeholders',  label: '\u{1f465} People' },
+    { id: 'moments',       label: '\u26a1 Moments' },
+    { id: 'followups',     label: '\u{1f4cc} Follow-ups' },
+    { id: 'notes',         label: '\u{1f4dd} Notes' },
   ];
 
   return (
-    <div className="space-y-4">
-      {/* Summary + save CTA */}
-      <div className="bg-primary-50/80 border border-primary-200/70 rounded-xl p-4">
-        <p className="text-sm text-primary-900 leading-relaxed">{analysis.summary}</p>
-        {((analysis.actionItems ?? []).length > 0 || (analysis.decisions ?? []).length > 0) && (
-          <div className="mt-3 pt-3 border-t border-primary-200/50">
-            <button
-              onClick={handleSaveToDeck}
-              disabled={saved}
-              className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-semibold hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {saved
-                ? '✓ Saved to deck'
-                : `💼 Save ${(analysis.actionItems ?? []).length + (analysis.decisions ?? []).length} item${(analysis.actionItems ?? []).length + (analysis.decisions ?? []).length !== 1 ? 's' : ''} to deck`}
-            </button>
-          </div>
+    <div className="space-y-0">
+      {/* Header row: title + save button */}
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-ink-800 truncate">{session.title}</h3>
+        {itemCount > 0 && (
+          <button
+            onClick={handleSaveToDeck}
+            disabled={saved}
+            className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-semibold hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0 ml-3"
+          >
+            {saved ? '✓ Saved' : `\u{1f4bc} Save ${itemCount} item${itemCount !== 1 ? 's' : ''}`}
+          </button>
         )}
       </div>
 
-      <div className="flex gap-1 flex-wrap border-b border-surface-200/70">
+      {/* Tab bar */}
+      <div className="flex gap-1 flex-wrap border-b border-surface-200/70 mb-4">
         {tabs.map(t => (
           <button
             key={t.id}
@@ -226,6 +245,62 @@ function SessionPanel({ session, dispatch, toast }) {
           </button>
         ))}
       </div>
+
+      {/* Overview: summary + key stats */}
+      {tab === 'overview' && (
+        <div className="space-y-4">
+          <div className="bg-primary-50/80 border border-primary-200/70 rounded-xl p-4">
+            <p className="text-sm text-primary-900 leading-relaxed">{analysis.summary}</p>
+          </div>
+
+          {/* Quick-glance stats */}
+          {(itemCount > 0 || (analysis.stakeholders ?? []).length > 0) && (
+            <div className="grid grid-cols-3 gap-3">
+              {(analysis.actionItems ?? []).length > 0 && (
+                <div className="surface-card p-3 text-center">
+                  <div className="text-2xl font-bold text-primary-700">{(analysis.actionItems ?? []).length}</div>
+                  <div className="text-xs text-ink-500 mt-0.5">Action Items</div>
+                </div>
+              )}
+              {(analysis.decisions ?? []).length > 0 && (
+                <div className="surface-card p-3 text-center">
+                  <div className="text-2xl font-bold text-primary-700">{(analysis.decisions ?? []).length}</div>
+                  <div className="text-xs text-ink-500 mt-0.5">Decisions</div>
+                </div>
+              )}
+              {(analysis.stakeholders ?? []).length > 0 && (
+                <div className="surface-card p-3 text-center">
+                  <div className="text-2xl font-bold text-primary-700">{(analysis.stakeholders ?? []).length}</div>
+                  <div className="text-xs text-ink-500 mt-0.5">People</div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Urgent action items callout */}
+          {(analysis.actionItems ?? []).filter(a => a.urgency === 'urgent').length > 0 && (
+            <div className="surface-card p-4">
+              <h4 className="text-xs font-semibold text-danger-400 uppercase tracking-wider mb-3">
+                🚨 Urgent Actions
+              </h4>
+              <ul className="space-y-1.5">
+                {(analysis.actionItems ?? [])
+                  .filter(a => a.urgency === 'urgent')
+                  .map((a, i) => (
+                    <li key={i} className="text-sm text-ink-800 flex gap-2">
+                      <span className="text-danger-400 shrink-0">·</span>
+                      <span>
+                        <span className="font-medium">{a.task}</span>
+                        {a.owner && <span className="text-ink-500"> — {a.owner}</span>}
+                      </span>
+                    </li>
+                  ))
+                }
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
 
       {tab === 'actions' && (
         <div className="space-y-2">
@@ -277,13 +352,13 @@ function SessionPanel({ session, dispatch, toast }) {
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       {d.support?.length > 0 && (
                         <div>
-                          <span className="text-emerald-600 font-semibold block mb-1">\u2705 Support</span>
+                          <span className="text-emerald-600 font-semibold block mb-1">{'\u2705'} Support</span>
                           {d.support.map((s, j) => <div key={j} className="text-ink-600">{s}</div>)}
                         </div>
                       )}
                       {d.concerns?.length > 0 && (
                         <div>
-                          <span className="text-amber-600 font-semibold block mb-1">\u26a0 Concerns</span>
+                          <span className="text-amber-600 font-semibold block mb-1">{'\u26a0'} Concerns</span>
                           {d.concerns.map((c, j) => <div key={j} className="text-ink-600">{c}</div>)}
                         </div>
                       )}
@@ -347,12 +422,20 @@ function SessionPanel({ session, dispatch, toast }) {
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold">{f.topic}</p>
-                    {f.person && <p className="text-xs mt-0.5">\u2192 {f.person}</p>}
+                    {f.person && <p className="text-xs mt-0.5">{'\u2192'} {f.person}</p>}
                     {f.context && <p className="text-xs opacity-70 mt-0.5">{f.context}</p>}
                   </div>
                 </div>
               ))
           }
+        </div>
+      )}
+
+      {tab === 'notes' && (
+        <div className="bg-surface-50 border border-surface-200/70 rounded-xl p-4">
+          <pre className="text-xs text-ink-700 leading-relaxed whitespace-pre-wrap font-mono">
+            {rawText || <span className="text-ink-400 italic">No original text stored.</span>}
+          </pre>
         </div>
       )}
     </div>
@@ -363,8 +446,10 @@ export default function WorkModeView() {
   const { state, dispatch } = useAppContext();
   const toast = useToast();
   const { sessions, activeSessionId } = state;
+  const [formOpen, setFormOpen] = useState(false);
 
   const workSessions   = sessions.filter(s => s.mode === APP_MODE.WORK);
+  const hasSession     = workSessions.length > 0;
   const activeSession  = workSessions.find(s => s.id === activeSessionId)
     ?? workSessions[0]
     ?? null;
@@ -385,6 +470,7 @@ export default function WorkModeView() {
     dispatch({ type: ACTIONS.ADD_SESSION, payload: session });
     dispatch({ type: ACTIONS.SET_ACTIVE_SESSION, payload: id });
     dispatch({ type: ACTIONS.SESSION_ANALYSIS_START });
+    setFormOpen(false);
 
     try {
       const analysis = await analyzeMeeting(rawText, session.title, type);
@@ -404,19 +490,26 @@ export default function WorkModeView() {
         <div>
           <h2 className="text-xl font-bold text-ink-900">{'\u{1f4bc}'} Work Mode</h2>
           <p className="text-sm text-ink-500 mt-0.5">
-            Paste a meeting transcript - AI extracts decisions, action items, and stakeholder signals.
+            Paste a meeting transcript — AI extracts decisions, action items, and stakeholder signals.
           </p>
         </div>
-        <div className="text-xs px-3 py-1.5 bg-primary-100 text-primary-700 rounded-full font-semibold border border-primary-200/70">
-          {workSessions.length} session{workSessions.length !== 1 ? 's' : ''}
-        </div>
+        {hasSession && (
+          <div className="text-xs px-3 py-1.5 bg-primary-100 text-primary-700 rounded-full font-semibold border border-primary-200/70">
+            {workSessions.length} session{workSessions.length !== 1 ? 's' : ''}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 space-y-4">
-          <NewSessionForm onCreate={handleCreate} />
+        {/* Left sidebar */}
+        <div className="lg:col-span-1 space-y-3">
+          <NewSessionForm
+            onCreate={handleCreate}
+            collapsed={hasSession && !formOpen}
+            onToggle={hasSession ? () => setFormOpen(o => !o) : null}
+          />
 
-          {workSessions.length > 0 && (
+          {hasSession && (
             <div className="surface-card p-4">
               <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-3">Sessions</h4>
               <div className="space-y-1">
@@ -438,6 +531,12 @@ export default function WorkModeView() {
                     >
                       <span>{meta.icon}</span>
                       <span className="flex-1 truncate font-medium">{s.title}</span>
+                      {s.analysis && !s.analysisError && (
+                        <span className="text-xs text-emerald-600 shrink-0">✓</span>
+                      )}
+                      {!s.analysis && !s.analysisError && (
+                        <Spinner size="sm" />
+                      )}
                       {topScore > 0 && (
                         <span className={`text-xs font-bold ${tier.color}`}>
                           {'\u2605'.repeat(tier.stars)}
@@ -451,6 +550,7 @@ export default function WorkModeView() {
           )}
         </div>
 
+        {/* Main panel */}
         <div className="lg:col-span-2">
           {activeSession
             ? <SessionPanel session={activeSession} dispatch={dispatch} toast={toast} />
