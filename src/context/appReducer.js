@@ -151,6 +151,12 @@ export function appReducer(state, action) {
     case ACTIONS.SET_CARDS:
       return { ...state, cards: action.payload };
 
+    case ACTIONS.ADD_CARDS: {
+      const existingIds = new Set(state.cards.map(c => c.id));
+      const newCards = action.payload.filter(c => !existingIds.has(c.id));
+      return { ...state, cards: [...state.cards, ...newCards] };
+    }
+
     case ACTIONS.TOGGLE_PIN:
       return {
         ...state,

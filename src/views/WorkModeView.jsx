@@ -1,12 +1,76 @@
 ﻿import { useState, useCallback } from 'react';
 import { v4 as uuid } from 'uuid';
 import { useAppContext } from '../hooks/useAppContext';
+import { useToast } from '../components/ui/useToast';
 import { ACTIONS } from '../context/actions';
 import { SESSION_TYPE, SESSION_TYPE_META, APP_MODE, getImportanceTier } from '../constants/modes';
 import { analyzeMeeting } from '../services/ai/meetingAnalyzer';
 import ImportanceBadge from '../components/intelligence/ImportanceBadge';
 import MomentCard from '../components/intelligence/MomentCard';
 import Spinner from '../components/ui/Spinner';
+
+function meetingItemsToCards(analysis, session) {
+  const cards = [];
+
+  for (const item of (analysis.actionItems ?? [])) {
+    if (!item.task) continue;
+    const meta = [
+      item.owner && `Owner: ${item.owner}`,
+      item.deadline && `Due: ${item.deadline}`,
+      item.urgency && `Urgency: ${item.urgency}`,
+    ].filter(Boolean).join(' · ');
+
+    cards.push({
+      id: uuid(),
+      unitId: null,
+      topic: `${session.title}: Action Item`,
+      coreIdea: meta || 'No owner or deadline specified.',
+      keyTerms: [],
+      mechanism: '',
+      clinicalTieIn: '',
+      professorEmphasis: '',
+      memoryHook: '',
+      likelyExamQuestion: item.task,
+      likelyExamAnswer: meta || 'See meeting notes.',
+      quizLikelihood: Math.round(item.importance ?? 60) / 100,
+      pinned: item.committed ?? false,
+      tags: [session.type, 'work', 'action-item'],
+      sourceReferences: [session.id],
+      createdAt: new Date().toISOString(),
+      studyModeVariants: { professorWording: item.task, examCram: meta },
+    });
+  }
+
+  for (const d of (analysis.decisions ?? [])) {
+    if (!d.text) continue;
+    const detail = [
+      `Status: ${d.status}`,
+      d.support?.length && `Support: ${d.support.join(', ')}`,
+    ].filter(Boolean).join(' · ');
+
+    cards.push({
+      id: uuid(),
+      unitId: null,
+      topic: `${session.title}: Decision`,
+      coreIdea: detail,
+      keyTerms: [],
+      mechanism: '',
+      clinicalTieIn: '',
+      professorEmphasis: '',
+      memoryHook: '',
+      likelyExamQuestion: d.text,
+      likelyExamAnswer: detail,
+      quizLikelihood: Math.round(d.importance ?? 60) / 100,
+      pinned: false,
+      tags: [session.type, 'work', 'decision'],
+      sourceReferences: [session.id],
+      createdAt: new Date().toISOString(),
+      studyModeVariants: { professorWording: d.text, examCram: detail },
+    });
+  }
+
+  return cards;
+}
 
 const WORK_SESSION_TYPES = Object.entries(SESSION_TYPE_META)
   .filter(([, meta]) => meta.mode === APP_MODE.WORK)
@@ -88,9 +152,20 @@ function NewSessionForm({ onCreate }) {
   );
 }
 
-function SessionPanel({ session }) {
+// ─── Session Analysis Panel ───────────────────────────────────────────────────
+
+function SessionPanel({ session, dispatch, toast }) {
   const { analysis, analysisError } = session;
   const [tab, setTab] = useState('actions');
+  const [saved, setSaved] = useState(false);
+
+  const handleSaveToDeck = () => {
+    const cards = meetingItemsToCards(analysis, session);
+    if (cards.length === 0) return;
+    dispatch({ type: ACTIONS.ADD_CARDS, payload: cards });
+    setSaved(true);
+    toast(`${cards.length} item${cards.length !== 1 ? 's' : ''} saved to your deck`, 'success');
+  };
 
   if (analysisError) {
     return (
@@ -118,8 +193,22 @@ function SessionPanel({ session }) {
 
   return (
     <div className="space-y-4">
+      {/* Summary + save CTA */}
       <div className="bg-primary-50/80 border border-primary-200/70 rounded-xl p-4">
         <p className="text-sm text-primary-900 leading-relaxed">{analysis.summary}</p>
+        {((analysis.actionItems ?? []).length > 0 || (analysis.decisions ?? []).length > 0) && (
+          <div className="mt-3 pt-3 border-t border-primary-200/50">
+            <button
+              onClick={handleSaveToDeck}
+              disabled={saved}
+              className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-semibold hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {saved
+                ? '✓ Saved to deck'
+                : `💼 Save ${(analysis.actionItems ?? []).length + (analysis.decisions ?? []).length} item${(analysis.actionItems ?? []).length + (analysis.decisions ?? []).length !== 1 ? 's' : ''} to deck`}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="flex gap-1 flex-wrap border-b border-surface-200/70">
@@ -272,6 +361,7 @@ function SessionPanel({ session }) {
 
 export default function WorkModeView() {
   const { state, dispatch } = useAppContext();
+  const toast = useToast();
   const { sessions, activeSessionId } = state;
 
   const workSessions   = sessions.filter(s => s.mode === APP_MODE.WORK);
@@ -363,7 +453,7 @@ export default function WorkModeView() {
 
         <div className="lg:col-span-2">
           {activeSession
-            ? <SessionPanel session={activeSession} />
+            ? <SessionPanel session={activeSession} dispatch={dispatch} toast={toast} />
             : (
               <div className="flex flex-col items-center justify-center h-64 text-center gap-3 bg-surface-50 rounded-2xl border border-dashed border-surface-300">
                 <span className="text-4xl">{'\u{1f4bc}'}</span>

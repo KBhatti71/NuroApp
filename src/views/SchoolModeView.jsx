@@ -1,12 +1,40 @@
 ﻿import { useState, useCallback } from 'react';
 import { v4 as uuid } from 'uuid';
 import { useAppContext } from '../hooks/useAppContext';
+import { useToast } from '../components/ui/useToast';
 import { ACTIONS } from '../context/actions';
 import { SESSION_TYPE, SESSION_TYPE_META, APP_MODE, getImportanceTier } from '../constants/modes';
 import { analyzeLecture } from '../services/ai/lectureAnalyzer';
 import ImportanceBadge from '../components/intelligence/ImportanceBadge';
 import MomentCard from '../components/intelligence/MomentCard';
 import Spinner from '../components/ui/Spinner';
+
+function flashcardsToCards(flashcards, session) {
+  return flashcards
+    .filter(f => f.front && f.back)
+    .map(f => ({
+      id: uuid(),
+      unitId: null,
+      topic: session.title,
+      coreIdea: f.back,
+      keyTerms: [],
+      mechanism: '',
+      clinicalTieIn: '',
+      professorEmphasis: '',
+      memoryHook: '',
+      likelyExamQuestion: f.front,
+      likelyExamAnswer: f.back,
+      quizLikelihood: Math.round(f.importance ?? 60) / 100,
+      pinned: false,
+      tags: [session.type, 'school'],
+      sourceReferences: [session.id],
+      createdAt: new Date().toISOString(),
+      studyModeVariants: {
+        professorWording: f.back,
+        examCram: f.front,
+      },
+    }));
+}
 
 const SCHOOL_SESSION_TYPES = Object.entries(SESSION_TYPE_META)
   .filter(([, meta]) => meta.mode === APP_MODE.SCHOOL)
@@ -75,9 +103,20 @@ function NewSessionForm({ onCreate }) {
   );
 }
 
-function SessionPanel({ session }) {
+// ─── Session Analysis Panel ───────────────────────────────────────────────────
+
+function SessionPanel({ session, dispatch, toast }) {
   const { analysis, analysisError } = session;
   const [tab, setTab] = useState('moments');
+  const [saved, setSaved] = useState(false);
+
+  const handleSaveToDeck = () => {
+    const cards = flashcardsToCards(analysis.flashcards ?? [], session);
+    if (cards.length === 0) return;
+    dispatch({ type: ACTIONS.ADD_CARDS, payload: cards });
+    setSaved(true);
+    toast(`${cards.length} card${cards.length !== 1 ? 's' : ''} saved to your deck`, 'success');
+  };
 
   if (analysisError) {
     return (
@@ -104,8 +143,22 @@ function SessionPanel({ session }) {
 
   return (
     <div className="space-y-4">
+      {/* Summary + save CTA */}
       <div className="bg-primary-50/80 border border-primary-200/70 rounded-xl p-4">
         <p className="text-sm text-primary-900 leading-relaxed">{analysis.summary}</p>
+        {(analysis.flashcards ?? []).length > 0 && (
+          <div className="mt-3 pt-3 border-t border-primary-200/50">
+            <button
+              onClick={handleSaveToDeck}
+              disabled={saved}
+              className="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-semibold hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {saved
+                ? '✓ Saved to deck'
+                : `🃏 Save ${analysis.flashcards.length} card${analysis.flashcards.length !== 1 ? 's' : ''} to deck`}
+            </button>
+          </div>
+        )}
       </div>
 
       {analysis.keyTakeaways?.length > 0 && (
@@ -204,6 +257,7 @@ function SessionPanel({ session }) {
 
 export default function SchoolModeView() {
   const { state, dispatch } = useAppContext();
+  const toast = useToast();
   const { sessions, activeSessionId } = state;
 
   const schoolSessions = sessions.filter(s => s.mode === APP_MODE.SCHOOL);
@@ -291,7 +345,7 @@ export default function SchoolModeView() {
 
         <div className="lg:col-span-2">
           {activeSession
-            ? <SessionPanel session={activeSession} />
+            ? <SessionPanel session={activeSession} dispatch={dispatch} toast={toast} />
             : (
               <div className="flex flex-col items-center justify-center h-64 text-center gap-3 bg-surface-50 rounded-2xl border border-dashed border-surface-300">
                 <span className="text-4xl">{'\u{1f4da}'}</span>
