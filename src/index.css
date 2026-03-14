@@ -59,14 +59,19 @@
     transform: rotateY(180deg);
   }
   .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
+    @supports (scrollbar-width: thin) {
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+    }
   }
   .scrollbar-thin::-webkit-scrollbar {
     width: 4px;
   }
   .scrollbar-thin::-webkit-scrollbar-track {
     background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background-color: rgba(168, 155, 139, 0.7);

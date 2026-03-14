@@ -15,6 +15,7 @@ import { v4 as uuid } from 'uuid';
 import { MOCK_CARDS } from '../../data/mockCards';
 import { isAIEnabled, generateJSON } from '../ai/claudeClient';
 import { buildCardSystemPrompt, buildCardUserPrompt } from '../ai/prompts';
+import { cardOutputSchema } from '../../lib/ai/validation';
 
 // ─── Mock-mode lookup ─────────────────────────────────────────────────────────
 
@@ -104,7 +105,7 @@ export async function generateCards(concepts, sources, professorStyle, quizPatte
       try {
         const excerpts   = extractRelevantExcerpts(concept, sources);
         const userPrompt = buildCardUserPrompt(concept, excerpts);
-        const raw        = await generateJSON(systemPrompt, userPrompt);
+        const raw        = await generateJSON(systemPrompt, userPrompt, undefined, cardOutputSchema);
         cards.push(normaliseCard(raw, concept));
       } catch (err) {
         // Don't abort the whole pipeline if one card fails — log and continue.

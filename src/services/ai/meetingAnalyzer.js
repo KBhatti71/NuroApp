@@ -20,6 +20,7 @@
 import { isAIEnabled, generateJSON, enrichConcepts } from './claudeClient';
 import { buildMeetingSystemPrompt, buildMeetingUserPrompt } from './prompts';
 import { WORK_KEYWORDS, getImportanceTier } from '../../constants/modes';
+import { meetingAnalysisSchema } from '../../lib/ai/validation';
 
 // ─── Mock fallback ────────────────────────────────────────────────────────────
 
@@ -107,7 +108,7 @@ export async function analyzeMeeting(rawText, title, sessionType = 'meeting') {
       const user   = buildMeetingUserPrompt(rawText, title);
       // Increased to 8192 — enriched schema with sections, crossReferences,
       // followUpQuestions requires more tokens than the base schema.
-      const analysis = await generateJSON(system, user, 8192);
+      const analysis = await generateJSON(system, user, 8192, meetingAnalysisSchema);
 
       // Second pass: enrich key topics with background context + sources.
       const topTopics = [

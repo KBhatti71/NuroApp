@@ -60,15 +60,23 @@ export async function generateText(systemPrompt, userPrompt, maxTokens = MAX_TOK
  * @param {number} [maxTokens]   - Override the default MAX_TOK for this call.
  * @returns {Promise<unknown>} Parsed JSON value.
  */
-export async function generateJSON(systemPrompt, userPrompt, maxTokens = MAX_TOK) {
+export async function generateJSON(systemPrompt, userPrompt, maxTokens = MAX_TOK, schema = null) {
   const raw = await generateText(systemPrompt, userPrompt, maxTokens);
   // Strip markdown code fences the model sometimes wraps around JSON,
   // accounting for optional leading/trailing whitespace around the fences.
   const stripped = raw.replace(/^\s*```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
   try {
-    return JSON.parse(stripped);
-  } catch {
-    throw new Error(`Claude returned invalid JSON.\n\nRaw response:\n${raw}`);
+    const parsed = JSON.parse(stripped);
+    if (!schema) return parsed;
+    const result = schema.safeParse(parsed);
+    if (!result.success) {
+      const issues = result.error.issues.map(issue => `${issue.path.join('.') || 'root'}: ${issue.message}`).join('; ');
+      throw new Error(`Claude JSON failed schema validation: ${issues}`);
+    }
+    return result.data;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    throw new Error(`Claude returned invalid JSON or failed validation.\n\nReason:\n${message}\n\nRaw response:\n${raw}`);
   }
 }
 
@@ -86,9 +94,10 @@ export async function enrichConcepts(conceptNames) {
   if (!conceptNames?.length || !isAIEnabled()) return [];
   try {
     const { buildEnrichmentSystemPrompt, buildEnrichmentUserPrompt } = await import('./prompts');
+    const { enrichmentItemSchema } = await import('../../lib/ai/validation');
     const system = buildEnrichmentSystemPrompt();
     const user   = buildEnrichmentUserPrompt(conceptNames.slice(0, 5));
-    const result = await generateJSON(system, user, 2048);
+    const result = await generateJSON(system, user, 2048, enrichmentItemSchema.array());
     return Array.isArray(result) ? result : [];
   } catch (err) {
     console.warn('[claudeClient] enrichConcepts failed, skipping:', err.message);

@@ -21,6 +21,7 @@
 import { isAIEnabled, generateJSON, enrichConcepts } from './claudeClient';
 import { buildLectureSystemPrompt, buildLectureUserPrompt } from './prompts';
 import { SCHOOL_KEYWORDS, getImportanceTier } from '../../constants/modes';
+import { lectureAnalysisSchema } from '../../lib/ai/validation';
 
 // ─── Mock fallback ────────────────────────────────────────────────────────────
 
@@ -94,7 +95,7 @@ export async function analyzeLecture(rawText, title, sessionType = 'lecture') {
       const user   = buildLectureUserPrompt(rawText, title);
       // Increased to 8192 — the enriched schema (sections, crossReferences,
       // followUpQuestions) requires more tokens than the base schema.
-      const analysis = await generateJSON(system, user, 8192);
+      const analysis = await generateJSON(system, user, 8192, lectureAnalysisSchema);
 
       // Second pass: enrich top concepts with background context + sources.
       // Runs in parallel-ish — we don't block the primary analysis result.
