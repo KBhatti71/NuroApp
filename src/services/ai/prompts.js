@@ -301,7 +301,7 @@ Rules:
 - \`committed: true\` only if person said "I will", "I'll have it", "by [date]", or equivalent.
 - Limit decisions to top 7, action items to top 10, stakeholders to top 8, sections to top 8, followUpQuestions to top 5.
 - Action item tasks must be specific and actionable — avoid vague entries like "follow up" with no context.
-- `committed: true` requires an explicit verbal commitment in the transcript — infer from "I will", "I'll", "by [date]", "I'll have it done".
+- \`committed: true\` requires an explicit verbal commitment in the transcript — infer from "I will", "I'll", "by [date]", "I'll have it done".
 - Sections should map to natural topic shifts or agenda items in the meeting.`;
 }
 
