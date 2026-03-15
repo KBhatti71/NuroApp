@@ -1,11 +1,12 @@
-﻿import { useAppContext, useNav } from '../hooks/useAppContext';
-import { ACTIONS } from '../context/actions';
-import { APP_MODE } from '../constants/modes';
-import { VIEWS } from '../constants/views';
-import { MOCK_CARDS } from '../data/mockCards';
-import { demoCourse, demoCourseMap, workCourse, workCourseMap } from '../data/courses';
-import { mockProfessorStyle, mockQuizPattern, mockHighYieldConcepts } from '../data/mockAnalysis';
-import Button from '../components/ui/Button';
+import { useNavigate } from 'react-router-dom';
+// @ts-ignore - Gradual migration to TypeScript
+import Button from '@/components/ui/Button';
+// @ts-ignore - Gradual migration to TypeScript
+import { MOCK_CARDS } from '@/data/mockCards';
+// @ts-ignore - Gradual migration to TypeScript
+import { demoCourse, demoCourseMap, workCourse, workCourseMap } from '@/data/courses';
+// @ts-ignore - Gradual migration to TypeScript
+import { mockProfessorStyle, mockQuizPattern, mockHighYieldConcepts } from '@/data/mockAnalysis';
 
 const FEATURES = [
   {
@@ -37,50 +38,25 @@ const STATS = [
   { value: '100%', label: 'Neuro-Focused' },
 ];
 
-export default function LandingView() {
-  const { dispatch } = useAppContext();
-  const navigate = useNav();
+export default function LandingPage() {
+  const navigate = useNavigate();
 
   const loadDemo = () => {
-    dispatch({ type: ACTIONS.SET_COURSE, payload: demoCourse });
-    dispatch({ type: ACTIONS.SET_COURSE_MAP, payload: demoCourseMap });
-    dispatch({
-      type: ACTIONS.SET_ANALYSIS,
-      payload: {
-        professorStyle: mockProfessorStyle,
-        quizPattern: mockQuizPattern,
-        highYieldConcepts: mockHighYieldConcepts,
-      },
-    });
-    dispatch({ type: ACTIONS.SET_CARDS, payload: MOCK_CARDS });
-    dispatch({ type: ACTIONS.SET_APP_MODE, payload: APP_MODE.NEURO });
-    navigate(VIEWS.CARD_GENERATION);
+    // For now, just navigate to course setup - we'll handle demo loading later
+    navigate('/course-setup');
   };
 
   const loadWork = () => {
-    dispatch({ type: ACTIONS.SET_COURSE, payload: workCourse });
-    dispatch({ type: ACTIONS.SET_COURSE_MAP, payload: workCourseMap });
-    dispatch({
-      type: ACTIONS.SET_ANALYSIS,
-      payload: {
-        professorStyle: mockProfessorStyle,
-        quizPattern: mockQuizPattern,
-        highYieldConcepts: mockHighYieldConcepts,
-      },
-    });
-    dispatch({ type: ACTIONS.SET_CARDS, payload: MOCK_CARDS });
-    dispatch({ type: ACTIONS.SET_APP_MODE, payload: APP_MODE.WORK });
-    navigate(VIEWS.CARD_GENERATION);
+    // For now, just navigate to course setup - we'll handle demo loading later
+    navigate('/course-setup');
   };
 
   const enterSchoolMode = () => {
-    dispatch({ type: ACTIONS.SET_APP_MODE, payload: APP_MODE.SCHOOL });
-    navigate(VIEWS.SCHOOL_MODE);
+    navigate('/school-mode');
   };
 
   const enterWorkMode = () => {
-    dispatch({ type: ACTIONS.SET_APP_MODE, payload: APP_MODE.WORK });
-    navigate(VIEWS.WORK_MODE);
+    navigate('/work-mode');
   };
 
   return (
@@ -100,13 +76,13 @@ export default function LandingView() {
             onClick={loadDemo}
             className="text-sm text-ink-500 hover:text-ink-900 transition-colors underline underline-offset-4"
           >
-            Load Neuroscience Demo \u2192
+            Load Neuroscience Demo →
           </button>
           <button
             onClick={loadWork}
             className="text-sm text-ink-500 hover:text-ink-900 transition-colors underline underline-offset-4"
           >
-            Load Work Demo \u2192
+            Load Work Demo →
           </button>
         </div>
       </header>
@@ -115,7 +91,7 @@ export default function LandingView() {
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 items-center">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-100/80 text-primary-700 rounded-full text-xs font-semibold mb-6 border border-primary-200/70">
-              \u25ce Professor-Aware \u00b7 Quiz-Aligned \u00b7 Meeting Intelligence
+              ◎ Professor-Aware · Quiz-Aligned · Meeting Intelligence
             </div>
 
             <h1 className="text-5xl sm:text-6xl font-bold text-ink-900 tracking-tight leading-tight mb-5">
@@ -128,8 +104,8 @@ export default function LandingView() {
             </p>
 
             <div className="flex flex-wrap gap-3">
-              <Button onClick={() => navigate(VIEWS.COURSE_SETUP)} size="lg">
-                Start Course \u2192
+              <Button onClick={() => navigate('/course-setup')} size="lg">
+                Start Course →
               </Button>
               <Button variant="secondary" onClick={enterSchoolMode} size="lg">
                 Open School Mode
@@ -164,8 +140,8 @@ export default function LandingView() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { title: 'School Mode', desc: 'Lecture intelligence in minutes', icon: '\u{1f4da}' },
-                { title: 'Work Mode', desc: 'Meeting summaries + action items', icon: '\u{1f4bc}' },
+                { title: 'School Mode', desc: 'Lecture intelligence in minutes', icon: '📚' },
+                { title: 'Work Mode', desc: 'Meeting summaries + action items', icon: '💼' },
               ].map(item => (
                 <div key={item.title} className="surface-panel p-4">
                   <div className="text-lg">{item.icon}</div>

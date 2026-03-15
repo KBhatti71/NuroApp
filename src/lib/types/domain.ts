@@ -103,6 +103,7 @@ export interface LearningSpace {
   subjectDomain?: string;
   termOrDateRange?: string;
   description?: string;
+  materialIds: string[];
   createdAt: string;
   updatedAt: string;
 }

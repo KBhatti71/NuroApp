@@ -1,4 +1,4 @@
-export const mockCourse = {
+export const demoCourse = {
   id: 'course_demo',
   name: 'NEUR 301: Systems Neuroscience',
   professor: 'Dr. Sarah Chen',
@@ -8,7 +8,7 @@ export const mockCourse = {
   createdAt: '2026-01-10T00:00:00Z',
 };
 
-export const mockCourseMap = {
+export const demoCourseMap = {
   totalWeeks: 15,
   examTopics: [
     'Ion channels and action potentials',

@@ -1,4 +1,4 @@
-import { mockCourseMap } from '../../data/mockCourse';
+import { demoCourseMap } from '../../data/courses';
 
 export function buildCourseMap(sources) {
   const syllabusSources = sources.filter(s => s.type === 'syllabus');
