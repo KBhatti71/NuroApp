@@ -1,5 +1,5 @@
 import { ACTIONS } from './actions';
-import { APP_MODE } from '../constants/modes';
+import { APP_MODE, DEFAULT_ANALYSIS_SETTINGS } from '../constants/modes';
 
 // Deep-merge loaded state with initialState so new fields are always present
 function migrateState(loaded) {
@@ -15,6 +15,7 @@ function migrateState(loaded) {
     sessions:            loaded.sessions            ?? initialState.sessions,
     activeSessionId:     loaded.activeSessionId     ?? initialState.activeSessionId,
     sessionAnalysisStatus: initialState.sessionAnalysisStatus,
+    analysisSettings: { ...initialState.analysisSettings, ...(loaded.analysisSettings || {}) },
   };
 }
 
@@ -30,6 +31,8 @@ export const initialState = {
     highYieldConcepts: [],
     analysisTimestamp: null,
   },
+  contentInsights: null,
+  analysisSettings: { ...DEFAULT_ANALYSIS_SETTINGS },
   cards: [],
   studyMode: 'all',
   pipeline: {
@@ -146,6 +149,18 @@ export function appReducer(state, action) {
           ...action.payload,
           analysisTimestamp: new Date().toISOString(),
         },
+      };
+
+    case ACTIONS.SET_CONTENT_INSIGHTS:
+      return {
+        ...state,
+        contentInsights: action.payload,
+      };
+
+    case ACTIONS.SET_ANALYSIS_SETTINGS:
+      return {
+        ...state,
+        analysisSettings: { ...state.analysisSettings, ...action.payload },
       };
 
     case ACTIONS.SET_CARDS:

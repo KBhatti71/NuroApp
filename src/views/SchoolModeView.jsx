@@ -57,10 +57,11 @@ const SCHOOL_SESSION_TYPES = Object.entries(SESSION_TYPE_META)
   .filter(([, meta]) => meta.mode === APP_MODE.SCHOOL)
   .map(([id, meta]) => ({ id, ...meta }));
 
-function NewSessionForm({ onCreate, collapsed, onToggle }) {
+function NewSessionForm({ onCreate, collapsed, onToggle, analysisSettings, onUpdateSettings }) {
   const [title, setTitle]     = useState('');
   const [type, setType]       = useState(SESSION_TYPE.LECTURE);
   const [rawText, setRawText] = useState('');
+  const settings = analysisSettings ?? {};
 
   const handleCreate = () => {
     if (!rawText.trim()) return;
@@ -119,9 +120,9 @@ function NewSessionForm({ onCreate, collapsed, onToggle }) {
           <label className="text-xs text-ink-500 font-medium">
             Paste transcript, notes, or summary
           </label>
-          <span className={`text-[10px] font-mono ${rawText.length > 10000 ? 'text-amber-500' : 'text-ink-400'}`}>
+          <span className={`text-[10px] font-mono ${rawText.length > 50000 ? 'text-amber-500' : 'text-ink-400'}`}>
             {rawText.length.toLocaleString()} chars
-            {rawText.length > 10000 && ' — very long; only first ~12K chars analysed'}
+            {rawText.length > 50000 && ' — very long; chunked analysis enabled'}
           </span>
         </div>
         <textarea
@@ -131,6 +132,43 @@ function NewSessionForm({ onCreate, collapsed, onToggle }) {
           rows={6}
           className="w-full px-3 py-2 text-sm border border-surface-200/70 rounded-xl bg-surface-50/80 focus:outline-none focus:ring-2 focus:ring-primary-300 resize-y font-mono"
         />
+      </div>
+
+      <div className="surface-card p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold text-ink-700">Concise mode</label>
+          <input
+            type="checkbox"
+            checked={settings.conciseMode ?? true}
+            onChange={e => onUpdateSettings?.({ conciseMode: e.target.checked })}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-[11px] text-ink-500 font-medium block mb-1">Chunk weight</label>
+            <input
+              type="number"
+              min="0.5"
+              max="2"
+              step="0.1"
+              value={settings.chunkImportanceWeight ?? 1}
+              onChange={e => onUpdateSettings?.({ chunkImportanceWeight: Number(e.target.value) })}
+              className="w-full px-3 py-2 text-xs border border-surface-200/70 rounded-lg bg-surface-50/80 focus:outline-none focus:ring-2 focus:ring-primary-300"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] text-ink-500 font-medium block mb-1">Emphasis weight</label>
+            <input
+              type="number"
+              min="0.5"
+              max="2"
+              step="0.1"
+              value={settings.emphasisWeight ?? 1}
+              onChange={e => onUpdateSettings?.({ emphasisWeight: Number(e.target.value) })}
+              className="w-full px-3 py-2 text-xs border border-surface-200/70 rounded-lg bg-surface-50/80 focus:outline-none focus:ring-2 focus:ring-primary-300"
+            />
+          </div>
+        </div>
       </div>
 
       <button
@@ -415,6 +453,52 @@ function SessionPanel({ session, dispatch, toast }) {
             <p className="text-sm text-primary-900 leading-relaxed">{analysis.summary}</p>
           </div>
 
+          {analysis.speakerStyle && (
+            <div className="surface-card p-4">
+              <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-2">Speaker Style</h4>
+              <div className="flex flex-wrap gap-2 text-xs">
+                {analysis.speakerStyle.tone && (
+                  <span className="px-2 py-0.5 bg-surface-50 border border-surface-200/70 rounded-full text-ink-600">
+                    Tone: {analysis.speakerStyle.tone}
+                  </span>
+                )}
+                {analysis.speakerStyle.pace && (
+                  <span className="px-2 py-0.5 bg-surface-50 border border-surface-200/70 rounded-full text-ink-600">
+                    Pace: {analysis.speakerStyle.pace}
+                  </span>
+                )}
+                {analysis.speakerStyle.structure && (
+                  <span className="px-2 py-0.5 bg-surface-50 border border-surface-200/70 rounded-full text-ink-600">
+                    Structure: {analysis.speakerStyle.structure}
+                  </span>
+                )}
+              </div>
+              {(analysis.speakerStyle.emphasisSignals ?? []).length > 0 && (
+                <ul className="space-y-1 mt-3">
+                  {analysis.speakerStyle.emphasisSignals.map((s, i) => (
+                    <li key={i} className="text-xs text-ink-600 flex gap-2">
+                      <span className="text-primary-500 shrink-0">Â·</span> {s}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {(analysis.speakerStyle.dominantSignals ?? []).length > 0 && (
+                <ul className="space-y-1 mt-3">
+                  {analysis.speakerStyle.dominantSignals.map((s, i) => (
+                    <li key={i} className="text-xs text-ink-600 flex gap-2">
+                      <span className="text-primary-500 shrink-0">Â·</span> {s}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {analysis.speakerStyle.confidence != null && (
+                <p className="text-[11px] text-ink-500 mt-2">
+                  Confidence: {Math.round(analysis.speakerStyle.confidence * 100)}%
+                </p>
+              )}
+            </div>
+          )}
+
           {(analysis.keyTakeaways ?? []).length > 0 && (
             <div className="surface-card p-4">
               <h4 className="text-xs font-semibold text-ink-500 uppercase tracking-wider mb-3">
@@ -573,7 +657,7 @@ function SessionPanel({ session, dispatch, toast }) {
 export default function SchoolModeView() {
   const { state, dispatch } = useAppContext();
   const toast = useToast();
-  const { sessions, activeSessionId } = state;
+  const { sessions, activeSessionId, analysisSettings } = state;
   const [formOpen, setFormOpen]           = useState(false);
   const [sessionSearch, setSessionSearch] = useState('');
 
@@ -612,7 +696,7 @@ export default function SchoolModeView() {
     setFormOpen(false);
 
     try {
-      const analysis = await analyzeLecture(rawText, session.title, type);
+      const analysis = await analyzeLecture(rawText, session.title, type, analysisSettings);
       dispatch({ type: ACTIONS.SET_SESSION_ANALYSIS, payload: { id, analysis } });
       dispatch({ type: ACTIONS.SESSION_ANALYSIS_COMPLETE });
     } catch (err) {
@@ -621,7 +705,11 @@ export default function SchoolModeView() {
         payload: { id, error: err.message },
       });
     }
-  }, [dispatch]);
+  }, [dispatch, analysisSettings]);
+
+  const updateAnalysisSettings = updates => {
+    dispatch({ type: ACTIONS.SET_ANALYSIS_SETTINGS, payload: updates });
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -646,6 +734,8 @@ export default function SchoolModeView() {
             onCreate={handleCreate}
             collapsed={hasSession && !formOpen}
             onToggle={hasSession ? () => setFormOpen(o => !o) : null}
+            analysisSettings={analysisSettings}
+            onUpdateSettings={updateAnalysisSettings}
           />
 
           {hasSession && (

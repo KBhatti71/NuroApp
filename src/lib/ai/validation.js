@@ -83,6 +83,15 @@ const confusionMomentSchema = z.object({
   context: z.string(),
 });
 
+const speakerStyleSchema = z.object({
+  tone: z.string(),
+  pace: z.string(),
+  structure: z.string(),
+  emphasisSignals: z.array(z.string()),
+  dominantSignals: z.array(z.string()).optional(),
+  confidence: z.number().optional(),
+});
+
 export const lectureAnalysisSchema = z.object({
   summary: z.string(),
   sections: z.array(lectureSectionSchema),
@@ -95,6 +104,7 @@ export const lectureAnalysisSchema = z.object({
   followUpQuestions: z.array(followUpQuestionSchema),
   confusionMoments: z.array(confusionMomentSchema),
   studySuggestions: z.array(z.string()),
+  speakerStyle: speakerStyleSchema.optional(),
   enrichment: z.array(enrichmentItemSchema).optional(),
 });
 
@@ -140,6 +150,6 @@ export const meetingAnalysisSchema = z.object({
   followUpQuestions: z.array(followUpQuestionSchema),
   crossReferences: z.array(crossReferenceSchema),
   importantMoments: z.array(importantMomentSchema),
+  speakerStyle: speakerStyleSchema.optional(),
   enrichment: z.array(enrichmentItemSchema).optional(),
 });
-

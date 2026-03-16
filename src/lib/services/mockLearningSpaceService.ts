@@ -1,11 +1,12 @@
-import { LearningSpaceService, CreateLearningSpaceData } from '../contracts';
-import { LearningSpace } from '../../types/domain';
-import { mockDb } from '../../db/mockDatabase';
+import { LearningSpaceService, CreateLearningSpaceData } from './contracts';
+import { LearningSpace } from '../types/domain';
+import { mockDb } from '../db/mockDatabase';
 
 export class MockLearningSpaceService implements LearningSpaceService {
   async createLearningSpace(data: CreateLearningSpaceData): Promise<LearningSpace> {
     return mockDb.create('learningSpaces', {
       userId: 'mock-user-id', // TODO: get from auth context
+      materialIds: [], // Start with empty materials array
       ...data,
     });
   }

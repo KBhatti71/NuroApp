@@ -1,4 +1,5 @@
 import { mockProfessorStyle } from '../../data/mockAnalysis';
+import { chunkContent } from '../../lib/ai/contentChunking';
 
 const EMPHASIS_PHRASES = [
   'know this', 'important', 'will be on the exam', 'critical', 'key point',
@@ -28,17 +29,38 @@ export function analyzeProfessorStyle(sources) {
     return mockProfessorStyle;
   }
 
-  const fullText = transcripts.map(s => s.content).join('\n\n').toLowerCase();
+  const fullText = transcripts.map(s => s.content).join('\n\n');
 
+  // Check if content is too long and needs chunking
+  if (fullText.length > 12000) {
+    return analyzeLongTranscript(fullText);
+  }
+
+  return analyzeText(fullText.toLowerCase());
+}
+
+function analyzeLongTranscript(fullText) {
+  console.log(`🔄 Analyzing long transcript (${fullText.length.toLocaleString()} chars) using chunked approach`);
+
+  const chunks = chunkContent(fullText);
+
+  // Analyze chunks hierarchically
+  const chunkAnalyses = chunks.map(chunk => analyzeTextChunk(chunk.text.toLowerCase()));
+
+  // Combine results from all chunks
+  return combineChunkAnalyses(chunkAnalyses, chunks.length);
+}
+
+function analyzeTextChunk(text) {
   // Count phrase patterns
   const phrasePatterns = EMPHASIS_PHRASES
-    .filter(p => fullText.includes(p))
-    .map(p => `"${p}" (used ${countOccurrences(fullText, p)}x)`);
+    .filter(p => text.includes(p))
+    .map(p => `"${p}" (used ${countOccurrences(text, p)}x)`);
 
   // Determine emphasis level
-  const clinicalCount = CLINICAL_KEYWORDS.reduce((n, kw) => n + countOccurrences(fullText, kw), 0);
-  const molecularCount = MOLECULAR_KEYWORDS.reduce((n, kw) => n + countOccurrences(fullText, kw), 0);
-  const mechanismCount = MECHANISM_KEYWORDS.reduce((n, kw) => n + countOccurrences(fullText, kw), 0);
+  const clinicalCount = CLINICAL_KEYWORDS.reduce((n, kw) => n + countOccurrences(text, kw), 0);
+  const molecularCount = MOLECULAR_KEYWORDS.reduce((n, kw) => n + countOccurrences(text, kw), 0);
+  const mechanismCount = MECHANISM_KEYWORDS.reduce((n, kw) => n + countOccurrences(text, kw), 0);
 
   let emphasisLevel = 'balanced';
   if (clinicalCount > molecularCount * 1.5) emphasisLevel = 'clinical';
@@ -46,23 +68,100 @@ export function analyzeProfessorStyle(sources) {
   else if (mechanismCount > clinicalCount + molecularCount) emphasisLevel = 'systems';
 
   // Detect lecture style
-  const hasCases = /patient|case|year.old|presents with/.test(fullText);
-  const hasMechanisms = mechanismCount > 20;
-  let lectureStyle = 'mixed';
-  if (hasCases && hasMechanisms) lectureStyle = 'case_based';
-  else if (hasMechanisms) lectureStyle = 'mechanism_first';
-  else if (hasCases) lectureStyle = 'case_based';
-
-  // Extract signature terms (neuroscience-specific)
-  const signatureTerms = extractSignatureTerms(fullText);
+  const hasCases = /patient|case|year.old|presents with/.test(text);
+  const hasMechanisms = mechanismCount > 5; // Lower threshold for chunks
+  const hasEmphasis = phrasePatterns.length > 0;
 
   return {
-    lectureStyle,
+    phrasePatterns,
+    clinicalCount,
+    molecularCount,
+    mechanismCount,
     emphasisLevel,
-    phrasePatterns: phrasePatterns.length > 0 ? phrasePatterns : mockProfessorStyle.phrasePatterns,
-    favoriteTopics: extractFavoriteTopics(fullText),
-    signatureTerms: signatureTerms.length > 0 ? signatureTerms : mockProfessorStyle.signatureTerms,
-    detectedStyle: buildStyleSummary(lectureStyle, emphasisLevel, phrasePatterns.length),
+    hasCases,
+    hasMechanisms,
+    hasEmphasis,
+    importance: (clinicalCount + molecularCount + mechanismCount + (hasEmphasis ? 10 : 0)) / 100
+  };
+}
+
+function combineChunkAnalyses(analyses, totalChunks) {
+  // Aggregate counts across all chunks
+  const totalClinical = analyses.reduce((sum, a) => sum + a.clinicalCount, 0);
+  const totalMolecular = analyses.reduce((sum, a) => sum + a.molecularCount, 0);
+  const totalMechanism = analyses.reduce((sum, a) => sum + a.mechanismCount, 0);
+
+  // Combine unique phrase patterns
+  const allPatterns = analyses.flatMap(a => a.phrasePatterns);
+  const uniquePatterns = [...new Set(allPatterns)];
+
+  // Determine overall emphasis level
+  let emphasisLevel = 'balanced';
+  if (totalClinical > totalMolecular * 1.5) emphasisLevel = 'clinical';
+  else if (totalMolecular > totalClinical * 1.5) emphasisLevel = 'molecular';
+  else if (totalMechanism > totalClinical + totalMolecular) emphasisLevel = 'systems';
+
+  // Detect lecture style
+  const hasCases = analyses.some(a => a.hasCases);
+  const hasMechanisms = analyses.some(a => a.hasMechanisms);
+  const hasEmphasis = analyses.some(a => a.hasEmphasis);
+
+  let lectureStyle = 'traditional';
+  if (hasCases && hasMechanisms) lectureStyle = 'case-based integrated';
+  else if (hasCases) lectureStyle = 'case-based';
+  else if (hasMechanisms) lectureStyle = 'mechanistic';
+
+  return {
+    emphasisLevel,
+    lectureStyle,
+    emphasisPatterns: uniquePatterns,
+    clinicalFocus: totalClinical > 20,
+    molecularFocus: totalMolecular > 20,
+    systemsFocus: totalMechanism > 20,
+    usesCaseStudies: hasCases,
+    emphasizesMechanisms: hasMechanisms,
+    usesEmphasisPhrases: hasEmphasis,
+    analysisMethod: 'chunked',
+    chunksAnalyzed: totalChunks
+  };
+}
+
+function analyzeText(text) {
+  // Count phrase patterns
+  const phrasePatterns = EMPHASIS_PHRASES
+    .filter(p => text.includes(p))
+    .map(p => `"${p}" (used ${countOccurrences(text, p)}x)`);
+
+  // Determine emphasis level
+  const clinicalCount = CLINICAL_KEYWORDS.reduce((n, kw) => n + countOccurrences(text, kw), 0);
+  const molecularCount = MOLECULAR_KEYWORDS.reduce((n, kw) => n + countOccurrences(text, kw), 0);
+  const mechanismCount = MECHANISM_KEYWORDS.reduce((n, kw) => n + countOccurrences(text, kw), 0);
+
+  let emphasisLevel = 'balanced';
+  if (clinicalCount > molecularCount * 1.5) emphasisLevel = 'clinical';
+  else if (molecularCount > clinicalCount * 1.5) emphasisLevel = 'molecular';
+  else if (mechanismCount > clinicalCount + molecularCount) emphasisLevel = 'systems';
+
+  // Detect lecture style
+  const hasCases = /patient|case|year.old|presents with/.test(text);
+  const hasMechanisms = mechanismCount > 20;
+  const hasEmphasis = phrasePatterns.length > 0;
+
+  let lectureStyle = 'traditional';
+  if (hasCases && hasMechanisms) lectureStyle = 'case-based integrated';
+  else if (hasCases) lectureStyle = 'case-based';
+  else if (hasMechanisms) lectureStyle = 'mechanistic';
+
+  return {
+    emphasisLevel,
+    lectureStyle,
+    emphasisPatterns: phrasePatterns,
+    clinicalFocus: clinicalCount > 20,
+    molecularFocus: molecularCount > 20,
+    systemsFocus: mechanismCount > 20,
+    usesCaseStudies: hasCases,
+    emphasizesMechanisms: hasMechanisms,
+    usesEmphasisPhrases: hasEmphasis,
   };
 }
 
@@ -74,15 +173,6 @@ function countOccurrences(text, phrase) {
     pos += phrase.length;
   }
   return count;
-}
-
-function extractSignatureTerms(text) {
-  const neuroTerms = [
-    'coincidence detector', 'all-or-none', 'quantal release', 'refractory period',
-    'hebbian', 'decussation', 'saltatory conduction', 'e/i balance',
-    'penumbra', 'therapeutic ratio', 'motor homunculus',
-  ];
-  return neuroTerms.filter(t => text.includes(t));
 }
 
 function extractFavoriteTopics(text) {

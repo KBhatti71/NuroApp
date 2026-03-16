@@ -92,7 +92,7 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/NuroApp">
       <PageShell>
         <ErrorBoundary>
           <Suspense fallback={<ViewFallback />}>

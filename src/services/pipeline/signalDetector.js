@@ -1,5 +1,6 @@
 import { SOURCE_WEIGHTS } from './contentParser';
 import { mockHighYieldConcepts } from '../../data/mockAnalysis';
+import { chunkContent } from '../../lib/ai/contentChunking';
 import { v4 as uuidv4 } from 'uuid';
 
 const NEURO_CONCEPTS = [
@@ -18,11 +19,57 @@ export function detectHighYieldConcepts(sources, courseMap, professorStyle, quiz
     return mockHighYieldConcepts;
   }
 
-  const fullText = sources.map(s => s.content || '').join('\n').toLowerCase();
+  const fullText = sources.map(s => s.content || '').join('\n');
 
   if (fullText.length < 100) {
     return mockHighYieldConcepts;
   }
+
+  // Handle long content with chunking
+  if (fullText.length > 15000) {
+    return detectConceptsInChunks(sources, fullText, courseMap, professorStyle, quizPattern);
+  }
+
+  return detectConceptsInText(sources, fullText.toLowerCase(), courseMap, professorStyle, quizPattern);
+}
+
+function detectConceptsInChunks(sources, fullText, courseMap, professorStyle, quizPattern) {
+  console.log(`🔄 Detecting concepts in long content (${fullText.length.toLocaleString()} chars) using chunked approach`);
+
+  const chunks = chunkContent(fullText);
+  const chunkResults = chunks.map(chunk =>
+    detectConceptsInText(sources, chunk.text.toLowerCase(), courseMap, professorStyle, quizPattern)
+  );
+
+  // Combine and deduplicate results across chunks
+  const allConcepts = chunkResults.flat();
+  const conceptMap = new Map();
+
+  // Aggregate scores for same concepts across chunks
+  allConcepts.forEach(concept => {
+    const key = concept.name.toLowerCase();
+    if (conceptMap.has(key)) {
+      const existing = conceptMap.get(key);
+      existing.score = Math.max(existing.score, concept.score);
+      existing.mentions += concept.mentions;
+      existing.sourceIds = [...new Set([...existing.sourceIds, ...concept.sourceIds])];
+    } else {
+      conceptMap.set(key, { ...concept });
+    }
+  });
+
+  // Return top concepts, sorted by score
+  return Array.from(conceptMap.values())
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 15) // Limit to top 15 concepts
+    .map(concept => ({
+      ...concept,
+      analysisMethod: 'chunked',
+      chunksAnalyzed: chunks.length
+    }));
+}
+
+function detectConceptsInText(sources, text, courseMap, professorStyle, quizPattern) {
 
   const scored = NEURO_CONCEPTS.map(concept => {
     let totalWeightedScore = 0;

@@ -4,6 +4,7 @@ import { analyzeProfessorStyle } from './professorAnalyzer';
 import { analyzeQuizzes } from './quizAnalyzer';
 import { detectHighYieldConcepts } from './signalDetector';
 import { generateCards } from './cardGenerator';
+import { analyzeContentStats, generateContentInsights } from '../../lib/ai/contentAnalysis';
 
 const STEP_DELAY = 900;
 
@@ -24,6 +25,16 @@ export async function runPipeline(sources, dispatch) {
     dispatch({ type: ACTIONS.PIPELINE_START });
     await delay(300);
 
+    // Analyze content and show insights
+    const contentStats = analyzeContentStats(sources);
+    const insights = generateContentInsights(contentStats);
+
+    // Dispatch content insights
+    dispatch({
+      type: ACTIONS.SET_CONTENT_INSIGHTS,
+      payload: { stats: contentStats, insights }
+    });
+
     await step(dispatch, 'parsing', 10, '⬡ Parsing and normalizing uploaded content...', 700);
 
     await step(dispatch, 'analyzing_course', 25, '◎ Building course map from syllabus...', 900);
@@ -33,7 +44,18 @@ export async function runPipeline(sources, dispatch) {
     await step(dispatch, 'analyzing_professor', 42, '◈ Inferring professor teaching style from transcripts...', 1000);
     const professorStyle = analyzeProfessorStyle(sources);
 
-    await step(dispatch, 'analyzing_quizzes', 58, '▣ Detecting quiz patterns and question formats...', 900);
+    // Show chunking info if content is long
+    const totalContentLength = sources.reduce((sum, s) => sum + (s.content?.length || 0), 0);
+    let chunkingMessage = '';
+    if (totalContentLength > 200000) {
+      chunkingMessage = ` (ultra-hierarchical analysis: ${(totalContentLength / 1000).toFixed(0)}K chars)`;
+    } else if (totalContentLength > 100000) {
+      chunkingMessage = ` (advanced chunking: ${(totalContentLength / 1000).toFixed(0)}K chars)`;
+    } else if (totalContentLength > 15000) {
+      chunkingMessage = ` (chunking ${Math.ceil(totalContentLength / 8000)} sections)`;
+    }
+
+    await step(dispatch, 'analyzing_quizzes', 58, `▣ Detecting quiz patterns and question formats${chunkingMessage}...`, 900);
     const quizPattern = analyzeQuizzes(sources);
 
     dispatch({

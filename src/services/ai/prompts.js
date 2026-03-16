@@ -117,12 +117,15 @@ export function buildCourseMapUserPrompt(syllabusText) {
 
 // ─── School Mode: Lecture Intelligence ───────────────────────────────────────
 
-export function buildLectureSystemPrompt(sessionType) {
+export function buildLectureSystemPrompt(sessionType, options = {}) {
   const context = sessionType === 'office_hours'
     ? 'an office-hours session where a student is asking a professor questions'
     : sessionType === 'study_group'
     ? 'a peer study-group session'
     : 'a formal lecture from a professor';
+  const concisionRule = options.conciseMode === false
+    ? 'Prefer clarity over brevity; include key context when needed.'
+    : 'Be extremely concise. Prefer short, dense phrasing over verbose sentences.';
 
   return `You are an expert academic learning assistant analysing ${context}.
 
@@ -179,7 +182,15 @@ Analyse the provided transcript/notes and return a JSON object with this exact s
   "confusionMoments": [
     { "text": "string — what was confusing", "context": "string — surrounding explanation" }
   ],
-  "studySuggestions": ["string — actionable next steps with urgency level"]
+  "studySuggestions": ["string — actionable next steps with urgency level"],
+  "speakerStyle": {
+    "tone": "string — e.g. calm, urgent, energetic, technical",
+    "pace": "string — slow, moderate, fast",
+    "structure": "string — narrative, outline, Q&A, stream-of-consciousness",
+    "emphasisSignals": ["string — cues like repetition, ALL CAPS, exam warnings"],
+    "dominantSignals": ["string - strongest speaking signals detected"],
+    "confidence": "number 0-1"
+  }
 }
 \`\`\`
 
@@ -187,6 +198,8 @@ Rules:
 - Return ONLY raw JSON — no markdown fences, no commentary.
 - \`importance\` scores: 75-100 = exam-critical, 50-74 = high-yield, 25-49 = useful, 0-24 = background.
 - Detect emphasis from: CAPS, repetition, "this will be on the exam", "remember", explicit slow-down signals.
+- ${concisionRule}
+- Avoid redundancy. If two items overlap, merge or drop the weaker one.
 - Limit: sections up to 8, concepts top 10, flashcards top 15, questions top 8, followUpQuestions top 5, crossReferences top 8.
 - Sections should follow the logical flow of the notes — each section maps to a distinct topic or phase of the lecture.
 - Flashcard fronts must be specific questions (not vague). Prefer "What mechanism does X use?" over "What is X?".
@@ -194,23 +207,32 @@ Rules:
 - Confusion moments: flag only text that is itself ambiguous or incomplete — not well-explained content.`;
 }
 
-export function buildLectureUserPrompt(rawText, title) {
+const MAX_ANALYSIS_INPUT_CHARS = 200000;
+
+export function buildLectureUserPrompt(rawText, title, highlights = []) {
+  const highlightBlock = (highlights ?? []).length
+    ? `\n\nHigh-priority lines (emphasis cues; prioritize these topics):\n${highlights.map((h, i) => `${i + 1}. ${h}`).join('\n')}`
+    : '';
+
   return `Analyse this ${title ? `"${title}" ` : ''}lecture transcript and generate structured study intelligence:
 
 ---
-${rawText.slice(0, 12000)}
+${rawText.slice(0, MAX_ANALYSIS_INPUT_CHARS)}${highlightBlock}
 ---`;
 }
 
 // ─── Work Mode: Meeting Intelligence ─────────────────────────────────────────
 
-export function buildMeetingSystemPrompt(sessionType) {
+export function buildMeetingSystemPrompt(sessionType, options = {}) {
   const context = {
     one_on_one:   'a 1:1 between a manager and direct report',
     presentation: 'a business presentation',
     standup:      'a team standup/scrum meeting',
     meeting:      'a business meeting',
   }[sessionType] ?? 'a business meeting';
+  const concisionRule = options.conciseMode === false
+    ? 'Prefer clarity over brevity; include key context when needed.'
+    : 'Be extremely concise. Prefer short, dense phrasing over verbose sentences.';
 
   return `You are an executive intelligence assistant analysing ${context}.
 
@@ -291,13 +313,23 @@ Extract structured intelligence from the transcript and return a JSON object wit
       "tier": "critical|high|medium|low",
       "reason": "string"
     }
-  ]
+  ],
+  "speakerStyle": {
+    "tone": "string - e.g. calm, urgent, energetic, technical",
+    "pace": "string - slow, moderate, fast",
+    "structure": "string - narrative, outline, Q&A, stream-of-consciousness",
+    "emphasisSignals": ["string - cues like repetition, ALL CAPS, deadline pressure"],
+    "dominantSignals": ["string - strongest speaking signals detected"],
+    "confidence": "number 0-1"
+  }
 }
 \`\`\`
 
 Rules:
 - Return ONLY raw JSON — no markdown fences.
 - Detect importance from: raised voice (CAPS/!), keywords (blocker/urgent/deadline/decision), repetition, disagreements.
+- ${concisionRule}
+- Avoid redundancy. If two items overlap, merge or drop the weaker one.
 - \`committed: true\` only if person said "I will", "I'll have it", "by [date]", or equivalent.
 - Limit decisions to top 7, action items to top 10, stakeholders to top 8, sections to top 8, followUpQuestions to top 5.
 - Action item tasks must be specific and actionable — avoid vague entries like "follow up" with no context.
@@ -305,11 +337,15 @@ Rules:
 - Sections should map to natural topic shifts or agenda items in the meeting.`;
 }
 
-export function buildMeetingUserPrompt(rawText, title) {
+export function buildMeetingUserPrompt(rawText, title, highlights = []) {
+  const highlightBlock = (highlights ?? []).length
+    ? `\n\nHigh-priority lines (emphasis cues; prioritize these topics):\n${highlights.map((h, i) => `${i + 1}. ${h}`).join('\n')}`
+    : '';
+
   return `Analyse this ${title ? `"${title}" ` : ''}meeting transcript:
 
 ---
-${rawText.slice(0, 12000)}
+${rawText.slice(0, MAX_ANALYSIS_INPUT_CHARS)}${highlightBlock}
 ---`;
 }
 
@@ -357,3 +393,7 @@ Rules:
 export function buildEnrichmentUserPrompt(concepts) {
   return `Enrich these concepts with background context and source recommendations:\n\n${concepts.map((c, i) => `${i + 1}. ${c}`).join('\n')}`;
 }
+
+
+
+

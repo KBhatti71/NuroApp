@@ -76,3 +76,9 @@ export const WORK_KEYWORDS = [
   'critical', 'must', 'need to', 'by end of', 'committed',
   'agreed', 'follow up', 'risk', 'escalate', 'ship', 'launch',
 ];
+
+export const DEFAULT_ANALYSIS_SETTINGS = {
+  conciseMode: true,
+  chunkImportanceWeight: 1,
+  emphasisWeight: 1,
+};
